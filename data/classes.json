@@ -1,0 +1,12 @@
+{
+  "warrior": {
+    "name": "Warrior",
+    "hp": 120,
+    "atk": 20,
+    "def": 20,
+    "speed": 12,
+    "resource": "rage",
+    "signatureSkill": "slash",
+    "skills": ["slash", "cleave", "guard", "warcry"]
+  }
+}

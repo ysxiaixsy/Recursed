@@ -1,0 +1,16 @@
+# Dependencies and builds
+node_modules/
+dist/
+test-results/
+playwright-report/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+
+# Files that the Claude desktop app saves into this folder
+Claude outputs/

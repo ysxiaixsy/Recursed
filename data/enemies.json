@@ -1,0 +1,8 @@
+{
+  "crypt_spider": {"name": "Crypt Spider", "hp": 38, "atk": 5, "def": 5, "speed": 14, "sprite": "monster"},
+  "bone_guard": {"name": "Bone Guard", "hp": 45, "atk": 8, "def": 30, "speed": 9},
+  "grave_rat": {"name": "Grave Rat", "hp": 16, "atk": 3, "def": 0, "speed": 18},
+  "hollow_acolyte": {"name": "Hollow Acolyte", "hp": 34, "atk": 9, "def": 0, "speed": 11, "pattern": {"every": 3, "action": "hex", "knockback": 30}},
+  "rage_leech": {"name": "Rage Leech", "hp": 36, "atk": 6, "def": 10, "speed": 13, "onHit": {"rage": -15}},
+  "the_warden": {"name": "The Warden", "hp": 200, "atk": 8, "def": 25, "speed": 10, "boss": true, "pattern": {"every": 4, "action": "crush", "power": 300, "telegraph": true}}
+}

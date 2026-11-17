@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Build art assets with Aseprite in batch mode.
+#
+#   tools/art/build                 build all assets, in dependency order
+#   tools/art/build warrior monster build only the named assets
+#
+# Environment:
+#   ASEPRITE     path to the Aseprite executable (default: `aseprite` on PATH)
+#   PREVIEW_DIR  if set, also write enlarged working previews to this folder
+set -euo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+root="$(cd "$here/../.." && pwd)"
+aseprite="${ASEPRITE:-aseprite}"
+
+# Aseprite on Windows needs Windows-style paths inside key=value parameters.
+native() {
+  if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s' "$1"; fi
+}
+
+assets=("$@")
+if [ ${#assets[@]} -eq 0 ]; then
+  assets=(warrior monster background ui_kit mockup)
+fi
+
+params=(--script-param "root=$(native "$root")")
+if [ -n "${PREVIEW_DIR:-}" ]; then
+  mkdir -p "$PREVIEW_DIR"
+  params+=(--script-param "preview=$(native "$PREVIEW_DIR")")
+fi
+
+for asset in "${assets[@]}"; do
+  "$aseprite" -b "${params[@]}" --script "$(native "$here/$asset.lua")"
+done

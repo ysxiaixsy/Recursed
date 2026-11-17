@@ -1,0 +1,341 @@
+{
+  "model": "tools/sim/reference_sim.py",
+  "hero": "warrior",
+  "encounters": [
+    {
+      "id": "two_spiders",
+      "slash": {
+        "outcome": "win",
+        "heroTurns": 4,
+        "heroHp": 96,
+        "heroRage": 100
+      },
+      "best": {
+        "plan": [
+          [
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "cleave",
+              null
+            ]
+          ],
+          [
+            [
+              "slash",
+              1
+            ]
+          ]
+        ],
+        "outcome": "win",
+        "heroTurns": 3,
+        "heroHp": 100,
+        "heroRage": 35
+      }
+    },
+    {
+      "id": "rat_pack",
+      "slash": {
+        "outcome": "win",
+        "heroTurns": 3,
+        "heroHp": 99,
+        "heroRage": 95
+      },
+      "best": {
+        "plan": [
+          [
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "cleave",
+              null
+            ]
+          ]
+        ],
+        "outcome": "win",
+        "heroTurns": 2,
+        "heroHp": 105,
+        "heroRage": 15
+      }
+    },
+    {
+      "id": "spider_and_guard",
+      "slash": {
+        "outcome": "win",
+        "heroTurns": 5,
+        "heroHp": 91,
+        "heroRage": 100
+      },
+      "best": {
+        "plan": [
+          [
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "guard",
+              null
+            ],
+            [
+              "slash",
+              1
+            ]
+          ],
+          [
+            [
+              "cleave",
+              null
+            ]
+          ],
+          [
+            [
+              "slash",
+              1
+            ]
+          ]
+        ],
+        "outcome": "win",
+        "heroTurns": 4,
+        "heroHp": 100,
+        "heroRage": 35
+      }
+    },
+    {
+      "id": "leech_and_rats",
+      "slash": {
+        "outcome": "win",
+        "heroTurns": 4,
+        "heroHp": 91,
+        "heroRage": 55
+      },
+      "best": {
+        "plan": [
+          [
+            [
+              "slash",
+              2
+            ]
+          ],
+          [
+            [
+              "guard",
+              null
+            ],
+            [
+              "slash",
+              2
+            ]
+          ],
+          [
+            [
+              "cleave",
+              null
+            ]
+          ]
+        ],
+        "outcome": "win",
+        "heroTurns": 3,
+        "heroHp": 94,
+        "heroRage": 10
+      }
+    },
+    {
+      "id": "acolyte_and_guard",
+      "slash": {
+        "outcome": "win",
+        "heroTurns": 5,
+        "heroHp": 91,
+        "heroRage": 100
+      },
+      "best": {
+        "plan": [
+          [
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "cleave",
+              null
+            ]
+          ],
+          [
+            [
+              "slash",
+              1
+            ]
+          ],
+          [
+            [
+              "slash",
+              1
+            ]
+          ]
+        ],
+        "outcome": "win",
+        "heroTurns": 4,
+        "heroHp": 98,
+        "heroRage": 45
+      }
+    },
+    {
+      "id": "leech_nest",
+      "slash": {
+        "outcome": "win",
+        "heroTurns": 6,
+        "heroHp": 62,
+        "heroRage": 45
+      },
+      "best": {
+        "plan": [
+          [
+            [
+              "slash",
+              1
+            ]
+          ],
+          [
+            [
+              "slash",
+              1
+            ]
+          ],
+          [
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "cleave",
+              null
+            ]
+          ],
+          [
+            [
+              "slash",
+              2
+            ]
+          ]
+        ],
+        "outcome": "win",
+        "heroTurns": 5,
+        "heroHp": 69,
+        "heroRage": 20
+      }
+    },
+    {
+      "id": "the_warden",
+      "slash": {
+        "outcome": "win",
+        "heroTurns": 13,
+        "heroHp": 24,
+        "heroRage": 100
+      },
+      "best": {
+        "plan": [
+          [
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "guard",
+              null
+            ],
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "warcry",
+              null
+            ],
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "guard",
+              null
+            ],
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "warcry",
+              null
+            ],
+            [
+              "slash",
+              0
+            ]
+          ],
+          [
+            [
+              "slash",
+              0
+            ]
+          ]
+        ],
+        "outcome": "win",
+        "heroTurns": 11,
+        "heroHp": 51,
+        "heroRage": 95
+      }
+    }
+  ]
+}

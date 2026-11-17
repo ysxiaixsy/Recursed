@@ -1,0 +1,47 @@
+{
+  "slash": {
+    "name": "Slash",
+    "target": "enemy",
+    "power": 100,
+    "rage": 20,
+    "cooldown": 0,
+    "free": false,
+    "text": "Hit one enemy for 100% ATK. Gain 20 Rage."
+  },
+  "cleave": {
+    "name": "Cleave",
+    "target": "allEnemies",
+    "power": 100,
+    "rage": -30,
+    "cooldown": 2,
+    "free": false,
+    "text": "Hit all enemies for 100% ATK."
+  },
+  "guard": {
+    "name": "Guard",
+    "target": "self",
+    "power": 0,
+    "rage": -20,
+    "cooldown": 2,
+    "free": true,
+    "effect": {
+      "kind": "guard",
+      "damageTakenPct": 50
+    },
+    "text": "Free action. Take half damage until your next turn."
+  },
+  "warcry": {
+    "name": "Warcry",
+    "target": "self",
+    "power": 0,
+    "rage": -50,
+    "cooldown": 4,
+    "free": true,
+    "effect": {
+      "kind": "atkUp",
+      "atkPct": 130,
+      "turns": 3
+    },
+    "text": "Free action. ATK +30% for this turn and the next 2."
+  }
+}

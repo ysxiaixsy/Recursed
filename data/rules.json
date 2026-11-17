@@ -1,0 +1,8 @@
+{
+  "barLength": 100,
+  "defenceConstant": 100,
+  "rageMax": 100,
+  "rageOnHit": 5,
+  "targetTurns": { "normal": 4, "elite": 7, "boss": 12 },
+  "targetHpLoss": { "normal": 0.2 }
+}

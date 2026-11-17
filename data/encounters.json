@@ -1,0 +1,9 @@
+[
+  { "id": "two_spiders", "name": "Two spiders", "kind": "normal", "floor": 1, "enemies": ["crypt_spider", "crypt_spider"] },
+  { "id": "rat_pack", "name": "Rat pack", "kind": "normal", "floor": 1, "enemies": ["grave_rat", "grave_rat", "grave_rat"] },
+  { "id": "spider_and_guard", "name": "Spider and guard", "kind": "normal", "floor": 1, "enemies": ["crypt_spider", "bone_guard"] },
+  { "id": "leech_and_rats", "name": "Leech and rats", "kind": "normal", "floor": 1, "enemies": ["grave_rat", "grave_rat", "rage_leech"] },
+  { "id": "acolyte_and_guard", "name": "Acolyte and guard", "kind": "normal", "floor": 1, "enemies": ["hollow_acolyte", "bone_guard"] },
+  { "id": "leech_nest", "name": "Leech nest", "kind": "elite", "floor": 1, "enemies": ["hollow_acolyte", "rage_leech", "rage_leech"] },
+  { "id": "the_warden", "name": "The Warden", "kind": "boss", "floor": 1, "enemies": ["the_warden"] }
+]
