@@ -55,6 +55,7 @@ async function state(page: Page) {
 async function openFight(page: Page, encounterId: string): Promise<void> {
   await page.goto('?debug=1');
   await page.waitForFunction(() => window.__recursed?.scene === 'picker' && window.__recursed.ready);
+  await page.screenshot({ path: `${SHOTS}/picker.png` });
   await tap(page, `encounter:${encounterId}`);
   await waitForInput(page, 0);
   // 3x speed: the speed button cycles 1x, 2x, 3x.
