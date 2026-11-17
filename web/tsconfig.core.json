@@ -1,0 +1,9 @@
+{
+  "//": "src/core alone, with no DOM and no host types. A use of window, document, or another browser API fails here.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": []
+  },
+  "include": ["src/core"]
+}

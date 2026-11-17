@@ -1,0 +1,9 @@
+{
+  "//": "Tests and tool config, which run in Node. The DOM lib is for Playwright page callbacks.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node"]
+  },
+  "include": ["test", "e2e", "vite.config.ts", "playwright.config.ts"]
+}
