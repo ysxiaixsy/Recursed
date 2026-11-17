@@ -1,6 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const port = 4173;
+const local = `http://localhost:${port}/Recursed/`;
+// BASE_URL=https://ysxiaixsy.github.io/Recursed/ npm run e2e  tests the live site instead.
+const baseURL = process.env['BASE_URL'] ?? local;
 
 export default defineConfig({
   testDir: 'e2e',
@@ -10,7 +13,7 @@ export default defineConfig({
   forbidOnly: !!process.env['CI'],
   reporter: [['list']],
   use: {
-    baseURL: `http://localhost:${port}/Recursed/`,
+    baseURL,
     trace: 'retain-on-failure',
   },
   projects: [
@@ -26,10 +29,13 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: `npx vite build && npx vite preview --port ${port} --strictPort`,
-    url: `http://localhost:${port}/Recursed/`,
-    reuseExistingServer: !process.env['CI'],
-    timeout: 180_000,
-  },
+  webServer:
+    baseURL === local
+      ? {
+          command: `npx vite build && npx vite preview --port ${port} --strictPort`,
+          url: local,
+          reuseExistingServer: !process.env['CI'],
+          timeout: 180_000,
+        }
+      : undefined,
 });
