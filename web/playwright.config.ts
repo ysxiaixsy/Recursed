@@ -3,7 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 const port = 4173;
 const local = `http://localhost:${port}/Recursed/`;
 // BASE_URL=https://ysxiaixsy.github.io/Recursed/ npm run e2e  tests the live site instead.
-const baseURL = process.env['BASE_URL'] ?? local;
+// The tests open relative URLs such as '?debug=1', so the base must end with '/'.
+const baseURL = (process.env['BASE_URL'] ?? local).replace(/\/?$/, '/');
 
 export default defineConfig({
   testDir: 'e2e',

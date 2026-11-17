@@ -5,6 +5,7 @@
 #   publishes it, so JP can test a stage on his phone before he merges it.
 #   The site shows the last published push.
 # - Pull requests run the checks only.
+# - After each publish, the end-to-end tests play the fights on the live site.
 name: web
 
 on:
@@ -73,6 +74,36 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
+
+  live:
+    name: Play the fights on the live site
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+
+      - name: Install the Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests on the published site
+        run: npm run e2e
+        env:
+          BASE_URL: ${{ needs.deploy.outputs.url }}
