@@ -104,7 +104,7 @@ It must answer one question: are the fights fun?
 
 | Stage | State | Needs |
 | --- | --- | --- |
-| S1 First fight | In review: PR #1, live at https://ysxiaixsy.github.io/Recursed/?debug=1 | JP's phone test, then merge |
+| S1 First fight | In review: PR #1, live at https://ysxiaixsy.github.io/Recursed/?debug=1 | JP's test on his laptop (no phone for now), then merge |
 | A1 Art for the slice | Ready | |
 | S2 One full floor | Waits for design | S1, and the "before S2" design in section 14 |
 | S3 Evolution and floor 2 | Waits for design | S2, A1, and the "before S3" design |
