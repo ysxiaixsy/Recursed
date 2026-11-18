@@ -77,6 +77,8 @@ export interface RunStep {
   run: RunState;
   /** The fight's events, for a battle input. */
   events: BattleEvent[];
+  /** The fight after a battle input, also when the run has moved on to the next phase. */
+  battle: BattleState | null;
 }
 
 export interface RunSummary {
@@ -168,6 +170,7 @@ export function upgradableSkills(data: GameData, run: RunState): string[] {
 export function runStep(data: GameData, run: RunState, input: RunInput): RunStep {
   const r = JSON.parse(JSON.stringify(run)) as RunState;
   const events: BattleEvent[] = [];
+  let battle: BattleState | null = null;
   const phase = r.phase;
   switch (input.kind) {
     case 'door': {
@@ -181,6 +184,7 @@ export function runStep(data: GameData, run: RunState, input: RunInput): RunStep
       if (phase.kind !== 'fight') throw new IllegalInput(`No fight now (${phase.kind})`);
       const step = battleStep(data, phase.battle, input.input);
       phase.battle = step.state;
+      battle = step.state;
       events.push(...step.events);
       afterFightStep(data, r, phase);
       break;
@@ -231,7 +235,7 @@ export function runStep(data: GameData, run: RunState, input: RunInput): RunStep
       break;
     }
   }
-  return { run: r, events };
+  return { run: r, events, battle };
 }
 
 // ---- internals --------------------------------------------------------------

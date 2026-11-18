@@ -272,6 +272,19 @@ describe('saves', () => {
     }
   });
 
+  test('a battle input returns the fight, also after the fight ends', () => {
+    let r = firstWith('fight', (x) => x.phase.kind === 'fight' && x.phase.battle.status === 'start');
+    let last = runStep(gameData, r, { kind: 'battle', input: { kind: 'begin' } });
+    r = last.run;
+    while (r.phase.kind === 'fight') {
+      const battle = r.phase.battle;
+      last = runStep(gameData, r, { kind: 'battle', input: { kind: 'skill', skill: 'slash', target: battle.enemies.findIndex((e) => e.hp > 0) } });
+      r = last.run;
+    }
+    expect(r.phase.kind).not.toBe('fight');
+    expect(last.battle?.status).toMatch(/won|lost/);
+  });
+
   test('a run state is plain JSON at every step', () => {
     for (const r of playOut(start(5))) expect(JSON.parse(JSON.stringify(r))).toEqual(r);
   });

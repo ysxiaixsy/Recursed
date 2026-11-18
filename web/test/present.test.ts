@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { battleStep, createBattle, type Step } from '../src/core/battle';
 import { gameData } from '../src/core/gameData';
-import { costLabel, enemySlots, initials, skillInfo } from '../src/ui/battle/present';
+import { costLabel, enemySlots, formatTime, gainLabel, initials, roomLabel, skillInfo } from '../src/ui/battle/present';
 import { integerScale } from '../src/ui/scale';
 
 describe('integerScale', () => {
@@ -84,5 +84,29 @@ describe('skillInfo', () => {
     step = battleStep(gameData, step.state, { kind: 'skill', skill: 'slash', target: 0 });
     step = battleStep(gameData, step.state, { kind: 'skill', skill: 'slash', target: 0 });
     expect(skillInfo(gameData, step.state, 'cleave', 'again')).toMatchObject({ title: 'Cleave', status: 'Tap again to use', tone: 'ok' });
+  });
+});
+
+describe('run texts', () => {
+  test('an upgraded skill shows a + and its upgrade text', () => {
+    const state = battleStep(gameData, createBattle(gameData, 'two_spiders', 'warrior', { upgraded: ['slash'] }), { kind: 'begin' }).state;
+    expect(skillInfo(gameData, state, 'slash', null)).toMatchObject({ title: 'Slash+', text: gameData.skills['slash']!.upgrade!.text });
+  });
+
+  test('a reward names what it is', () => {
+    expect(gainLabel(gameData, { kind: 'item', id: 'bone_axe' })).toEqual({ title: 'Bone Axe', kind: 'Weapon', text: 'ATK +6. Speed -1.' });
+    expect(gainLabel(gameData, { kind: 'consumable', id: 'bomb' })).toMatchObject({ title: 'Bomb', kind: 'Consumable' });
+    expect(gainLabel(gameData, { kind: 'skillUpgrade', skill: 'cleave' })).toEqual({ title: 'Cleave+', kind: 'Skill upgrade', text: 'Cleave+: cooldown 1.' });
+  });
+
+  test('a door says what is behind it', () => {
+    expect(roomLabel(gameData, 'rest')).toEqual({ title: 'Rest', text: 'Heal 35% of max HP, or upgrade a skill.' });
+    expect(roomLabel(gameData, 'boss').title).toBe('The Warden');
+  });
+
+  test('play time reads as minutes and seconds', () => {
+    expect(formatTime(0)).toBe('0:00');
+    expect(formatTime(61_500)).toBe('1:01');
+    expect(formatTime(3_725_000)).toBe('62:05');
   });
 });
