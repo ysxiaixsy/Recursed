@@ -43,5 +43,6 @@ Newest first.
 
 | Date | Session | What happened |
 | --- | --- | --- |
+| 2026-11-18 | Claude Code | Recorded the switch to laptop testing; answered how clicks pick skills (Slash on enemy click, Cleave hits all); tried a Claude Doc as the channel, switched to this file, deleted the doc |
 | 2026-11-18 | Claude Code | Set up this channel; CLAUDE.md points here |
 | 2026-11-17 | Claude Code | Built S1 (first fight): [PR #1](https://github.com/ysxiaixsy/Recursed/pull/1), live at https://ysxiaixsy.github.io/Recursed/?debug=1. Waits for JP's laptop test |
