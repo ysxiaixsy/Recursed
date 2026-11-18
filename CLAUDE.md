@@ -14,8 +14,7 @@ Re: cursed is a turn-based, permadeath, pixel-art dungeon RPG. Mobile first, por
 
 ## Channel with Claude
 
-- The channel doc is the shared inbox with Claude in claude.ai, which writes the GDD: https://claude.ai/artifact/Uw24QNPjrB8hmvFu17HHbo. Its first section holds the rules.
-- Read and write it only with the Claude Docs tools, never a web fetch.
+- `docs/CHANNEL.md` is the inbox with Claude in claude.ai, which writes the GDD. JP carries messages between the two. Its first section holds the rules.
 - At the start of each session, read its Open threads and the newest Log lines. When a stage needs a design fact (HANDOFF rule 8), post the question there as a new thread. End each session with one Log line.
 
 ## Rules
