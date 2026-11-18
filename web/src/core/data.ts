@@ -35,6 +35,15 @@ export type SkillEffect =
   | { readonly kind: 'guard'; readonly damageTakenPct: number }
   | { readonly kind: 'atkUp'; readonly atkPct: number; readonly turns: number };
 
+/** The values a skill upgrade changes (HANDOFF S2). Each skill can be upgraded once. */
+export interface SkillUpgrade {
+  readonly power?: number;
+  readonly rage?: number;
+  readonly cooldown?: number;
+  readonly effect?: SkillEffect;
+  readonly text: string;
+}
+
 export interface SkillDef {
   readonly id: string;
   readonly name: string;
@@ -48,6 +57,7 @@ export interface SkillDef {
   readonly free: boolean;
   readonly effect: SkillEffect | null;
   readonly text: string;
+  readonly upgrade: SkillUpgrade | null;
 }
 
 export type EnemyAction = 'attack' | 'hex' | 'crush';
@@ -78,12 +88,96 @@ export interface EncounterDef {
   readonly enemies: readonly string[];
 }
 
+export type ItemSlot = 'weapon' | 'armor' | 'relic';
+export const ITEM_SLOTS: readonly ItemSlot[] = ['weapon', 'armor', 'relic'];
+
+export type ItemEffect =
+  | { readonly kind: 'startRage'; readonly rage: number }
+  | { readonly kind: 'skillRage'; readonly skill: string; readonly rage: number };
+
+export interface ItemDef {
+  readonly id: string;
+  readonly name: string;
+  readonly slot: ItemSlot;
+  readonly atk: number;
+  readonly def: number;
+  /** Max HP. */
+  readonly hp: number;
+  readonly speed: number;
+  readonly effect: ItemEffect | null;
+  readonly text: string;
+}
+
+export type ConsumableEffect =
+  | { readonly kind: 'healPct'; readonly pct: number }
+  | { readonly kind: 'gauge'; readonly amount: number }
+  | { readonly kind: 'fixedDamageAll'; readonly damage: number };
+
+export interface ConsumableDef {
+  readonly id: string;
+  readonly name: string;
+  readonly effect: ConsumableEffect;
+  readonly text: string;
+}
+
+export interface Consumables {
+  readonly slots: number;
+  readonly freeAction: boolean;
+  readonly maxPerTurn: number;
+  readonly items: Readonly<Record<string, ConsumableDef>>;
+}
+
+export interface CurseDef {
+  readonly id: string;
+  readonly name: string;
+  /** Healing on each kill, in percent of max HP. */
+  readonly onKillHealPct: number;
+  /** All other healing, in percent. */
+  readonly otherHealingPct: number;
+  /** One more multiplier on formula damage the hero deals. */
+  readonly damageDealtPct: number;
+  readonly maxHpPct: number;
+  readonly text: string;
+}
+
+export type RoomType = 'fight' | 'elite' | 'rest' | 'treasure' | 'grave';
+export const ROOM_TYPES: readonly RoomType[] = ['fight', 'elite', 'rest', 'treasure', 'grave'];
+export type RewardKind = 'item' | 'consumable' | 'skillUpgrade';
+const REWARD_KINDS: readonly RewardKind[] = ['item', 'consumable', 'skillUpgrade'];
+
+export interface RewardChoices {
+  readonly choices: number;
+  readonly kinds: readonly RewardKind[];
+  /** One of the choices is always an item for this slot. */
+  readonly alwaysOne: ItemSlot | null;
+}
+
+export interface RoomsDef {
+  readonly roomsPerFloor: number;
+  readonly doorsPerRoom: number;
+  readonly weights: Readonly<Record<RoomType, number>>;
+  readonly noEliteInRoom: readonly number[];
+  readonly restDoorInRoom: readonly number[];
+  readonly graveMaxPerFloor: number;
+  readonly rewards: {
+    readonly fight: RewardChoices;
+    readonly elite: RewardChoices;
+    readonly treasure: { readonly gives: readonly RewardKind[] };
+    /** Rest: heal this percent of max HP, or upgrade a skill. */
+    readonly rest: { readonly healPct: number };
+  };
+}
+
 export interface GameData {
   readonly rules: Rules;
   readonly classes: Readonly<Record<string, ClassDef>>;
   readonly skills: Readonly<Record<string, SkillDef>>;
   readonly enemies: Readonly<Record<string, EnemyDef>>;
   readonly encounters: readonly EncounterDef[];
+  readonly items: Readonly<Record<string, ItemDef>>;
+  readonly consumables: Consumables;
+  readonly curses: Readonly<Record<string, CurseDef>>;
+  readonly rooms: RoomsDef;
 }
 
 /** The parsed contents of each file in data/. */
@@ -93,6 +187,10 @@ export interface RawData {
   readonly skills: unknown;
   readonly enemies: unknown;
   readonly encounters: unknown;
+  readonly items: unknown;
+  readonly consumables: unknown;
+  readonly curses: unknown;
+  readonly rooms: unknown;
 }
 
 export class DataError extends Error {
@@ -159,6 +257,10 @@ class Reader {
     return false;
   }
 
+  optionalInt(o: Obj, key: string, path: string, fallback: number, min = Number.MIN_SAFE_INTEGER): number {
+    return o[key] === undefined ? fallback : this.int(o, key, path, min);
+  }
+
   optionalBool(o: Obj, key: string, path: string): boolean {
     return o[key] === undefined ? false : this.bool(o, key, path);
   }
@@ -204,6 +306,21 @@ function parseEffect(r: Reader, raw: unknown, path: string): SkillEffect | null 
   }
 }
 
+const UPGRADE_FIELDS = ['power', 'rage', 'cooldown', 'effect', 'text'];
+
+function parseUpgrade(r: Reader, raw: unknown, path: string): SkillUpgrade | null {
+  if (raw === undefined) return null;
+  const o = r.object(raw, path);
+  for (const key of Object.keys(o)) if (!UPGRADE_FIELDS.includes(key)) r.fail(`${path}.${key}`, 'is not a value an upgrade can change');
+  const out: { -readonly [K in keyof SkillUpgrade]: SkillUpgrade[K] } = { text: r.string(o, 'text', path) };
+  if (o['power'] !== undefined) out.power = r.int(o, 'power', path, 0);
+  if (o['rage'] !== undefined) out.rage = r.int(o, 'rage', path);
+  if (o['cooldown'] !== undefined) out.cooldown = r.int(o, 'cooldown', path, 0);
+  const effect = parseEffect(r, o['effect'], `${path}.effect`);
+  if (effect) out.effect = effect;
+  return out;
+}
+
 function parseSkills(r: Reader, raw: unknown): Record<string, SkillDef> {
   const all = r.object(raw, 'skills');
   const out: Record<string, SkillDef> = {};
@@ -220,6 +337,7 @@ function parseSkills(r: Reader, raw: unknown): Record<string, SkillDef> {
       free: r.bool(o, 'free', path),
       effect: parseEffect(r, o['effect'], `${path}.effect`),
       text: r.string(o, 'text', path),
+      upgrade: parseUpgrade(r, o['upgrade'], `${path}.upgrade`),
     };
   }
   return out;
@@ -324,6 +442,149 @@ function parseEncounters(
   });
 }
 
+function parseItems(r: Reader, raw: unknown, skills: Readonly<Record<string, SkillDef>>): Record<string, ItemDef> {
+  const all = r.object(raw, 'items');
+  const out: Record<string, ItemDef> = {};
+  for (const [id, value] of Object.entries(all)) {
+    const path = `items.${id}`;
+    const o = r.object(value, path);
+    let effect: ItemEffect | null = null;
+    if (o['effect'] !== undefined) {
+      const ep = `${path}.effect`;
+      const e = r.object(o['effect'], ep);
+      const kind = r.oneOf(e, 'kind', ep, ['startRage', 'skillRage'] as const);
+      if (kind === 'startRage') effect = { kind, rage: r.int(e, 'rage', ep, 0) };
+      if (kind === 'skillRage') {
+        const skill = r.string(e, 'skill', ep);
+        if (skill && !skills[skill]) r.fail(`${ep}.skill`, `unknown skill ${skill}`);
+        effect = { kind, skill, rage: r.int(e, 'rage', ep) };
+      }
+    }
+    out[id] = {
+      id,
+      name: r.string(o, 'name', path),
+      slot: r.oneOf(o, 'slot', path, ITEM_SLOTS) ?? 'relic',
+      atk: r.optionalInt(o, 'atk', path, 0),
+      def: r.optionalInt(o, 'def', path, 0),
+      hp: r.optionalInt(o, 'hp', path, 0),
+      speed: r.optionalInt(o, 'speed', path, 0),
+      effect,
+      text: r.string(o, 'text', path),
+    };
+  }
+  return out;
+}
+
+function parseConsumables(r: Reader, raw: unknown): Consumables {
+  const path = 'consumables';
+  const o = r.object(raw, path);
+  const all = r.object(o['items'], `${path}.items`);
+  const items: Record<string, ConsumableDef> = {};
+  for (const [id, value] of Object.entries(all)) {
+    const ip = `${path}.items.${id}`;
+    const io = r.object(value, ip);
+    const ep = `${ip}.effect`;
+    const e = r.object(io['effect'], ep);
+    let effect: ConsumableEffect = { kind: 'gauge', amount: 0 };
+    switch (r.oneOf(e, 'kind', ep, ['healPct', 'gauge', 'fixedDamageAll'] as const)) {
+      case 'healPct':
+        effect = { kind: 'healPct', pct: r.int(e, 'pct', ep, 0) };
+        break;
+      case 'gauge':
+        effect = { kind: 'gauge', amount: r.int(e, 'amount', ep, 0) };
+        break;
+      case 'fixedDamageAll':
+        effect = { kind: 'fixedDamageAll', damage: r.int(e, 'damage', ep, 0) };
+        break;
+      case null:
+        break;
+    }
+    items[id] = { id, name: r.string(io, 'name', ip), effect, text: r.string(io, 'text', ip) };
+  }
+  return {
+    slots: r.int(o, 'slots', path, 0),
+    freeAction: r.bool(o, 'freeAction', path),
+    maxPerTurn: r.int(o, 'maxPerTurn', path, 0),
+    items,
+  };
+}
+
+function parseCurses(r: Reader, raw: unknown): Record<string, CurseDef> {
+  const all = r.object(raw, 'curses');
+  const out: Record<string, CurseDef> = {};
+  for (const [id, value] of Object.entries(all)) {
+    const path = `curses.${id}`;
+    const o = r.object(value, path);
+    out[id] = {
+      id,
+      name: r.string(o, 'name', path),
+      onKillHealPct: r.optionalInt(o, 'onKillHealPct', path, 0, 0),
+      otherHealingPct: r.optionalInt(o, 'otherHealingPct', path, 100, 0),
+      damageDealtPct: r.optionalInt(o, 'damageDealtPct', path, 100, 0),
+      maxHpPct: r.optionalInt(o, 'maxHpPct', path, 100, 1),
+      text: r.string(o, 'text', path),
+    };
+  }
+  return out;
+}
+
+function parseRewardChoices(r: Reader, raw: unknown, path: string): RewardChoices {
+  const o = r.object(raw, path);
+  const kinds = r.array(o['kinds'], `${path}.kinds`).map((k, i) => {
+    if (typeof k === 'string' && (REWARD_KINDS as readonly string[]).includes(k)) return k as RewardKind;
+    r.fail(`${path}.kinds[${i}]`, `must be one of ${REWARD_KINDS.join(', ')}`);
+    return 'item' as const;
+  });
+  return {
+    choices: r.int(o, 'choices', path, 1),
+    kinds,
+    alwaysOne: o['alwaysOne'] === undefined ? null : r.oneOf(o, 'alwaysOne', path, ITEM_SLOTS),
+  };
+}
+
+function parseRooms(r: Reader, raw: unknown): RoomsDef {
+  const path = 'rooms';
+  const o = r.object(raw, path);
+  const w = r.object(o['weights'], `${path}.weights`);
+  for (const key of Object.keys(w)) {
+    if (!(ROOM_TYPES as readonly string[]).includes(key)) r.fail(`${path}.weights.${key}`, `must be one of ${ROOM_TYPES.join(', ')}`);
+  }
+  const weights = Object.fromEntries(ROOM_TYPES.map((t) => [t, r.optionalInt(w, t, `${path}.weights`, 0, 0)])) as Record<RoomType, number>;
+  const ints = (key: string) =>
+    r.array(o[key], `${path}.${key}`).map((v, i) => {
+      if (typeof v === 'number' && Number.isSafeInteger(v) && v >= 1) return v;
+      r.fail(`${path}.${key}[${i}]`, 'must be a room number of at least 1');
+      return 0;
+    });
+  const rw = r.object(o['rewards'], `${path}.rewards`);
+  const treasure = r.object(rw['treasure'], `${path}.rewards.treasure`);
+  const rest = r.object(rw['rest'], `${path}.rewards.rest`);
+  const heal = r
+    .array(rest['options'], `${path}.rewards.rest.options`)
+    .map((opt) => r.object(opt, `${path}.rewards.rest.options`))
+    .find((opt) => opt['kind'] === 'healPct');
+  return {
+    roomsPerFloor: r.int(o, 'roomsPerFloor', path, 1),
+    doorsPerRoom: r.int(o, 'doorsPerRoom', path, 1),
+    weights,
+    noEliteInRoom: ints('noEliteInRoom'),
+    restDoorInRoom: ints('restDoorInRoom'),
+    graveMaxPerFloor: r.int(o, 'graveMaxPerFloor', path, 0),
+    rewards: {
+      fight: parseRewardChoices(r, rw['fight'], `${path}.rewards.fight`),
+      elite: parseRewardChoices(r, rw['elite'], `${path}.rewards.elite`),
+      treasure: {
+        gives: r.array(treasure['gives'], `${path}.rewards.treasure.gives`).map((k, i) => {
+          if (typeof k === 'string' && (REWARD_KINDS as readonly string[]).includes(k)) return k as RewardKind;
+          r.fail(`${path}.rewards.treasure.gives[${i}]`, `must be one of ${REWARD_KINDS.join(', ')}`);
+          return 'item' as const;
+        }),
+      },
+      rest: { healPct: heal ? r.int(heal, 'pct', `${path}.rewards.rest.options`, 0) : 0 },
+    },
+  };
+}
+
 /** Check the raw JSON of data/ and return it typed. Throws a DataError that lists every problem. */
 export function parseGameData(raw: RawData): GameData {
   const r = new Reader();
@@ -332,6 +593,10 @@ export function parseGameData(raw: RawData): GameData {
   const classes = parseClasses(r, raw.classes, skills);
   const enemies = parseEnemies(r, raw.enemies);
   const encounters = parseEncounters(r, raw.encounters, rules, enemies);
+  const items = parseItems(r, raw.items, skills);
+  const consumables = parseConsumables(r, raw.consumables);
+  const curses = parseCurses(r, raw.curses);
+  const rooms = parseRooms(r, raw.rooms);
   if (r.problems.length > 0) throw new DataError(r.problems);
-  return { rules, classes, skills, enemies, encounters };
+  return { rules, classes, skills, enemies, encounters, items, consumables, curses, rooms };
 }
