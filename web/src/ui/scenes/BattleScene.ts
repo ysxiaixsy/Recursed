@@ -15,14 +15,15 @@ import { gameData } from '../../core/gameData';
 import { backgroundKey, spriteName } from '../assets';
 import { bridge, resetBridge, tapZone } from '../bridge';
 import { C } from '../palette';
+import { GAME_WIDTH } from '../scale';
 import { addText } from '../text';
-import { EndPanel, floorLabel, HeroPanel, SkillBar, SpeedButton, TurnRow, type MarkerInfo } from '../battle/hud';
-import { costLabel, enemySlots, skillInfo } from '../battle/present';
+import { EndPanel, floorLabel, HeroPanel, LAYOUT, SkillBar, SpeedButton, TurnRow, type MarkerInfo } from '../battle/hud';
+import { costLabel, enemySlots, skillInfo, type Prompt } from '../battle/present';
 import { EnemyView, HeroView } from '../battle/units';
 
 /** S1 has one hero class. */
 const HERO_CLASS = 'warrior';
-const HERO_SLOT = { x: 135, ground: 316 };
+const HERO_SLOT = LAYOUT.hero;
 const SPEEDS = [1, 2, 3] as const;
 
 type Phase = 'busy' | 'input' | 'ended';
@@ -31,10 +32,11 @@ export class BattleScene extends Phaser.Scene {
   private encounterId = '';
   private state!: BattleState;
   private phase: Phase = 'busy';
-  /** The skill whose text is shown. */
-  private focus = '';
-  /** The usable enemy-target skill that a tap on an enemy uses. */
-  private armed: string | null = null;
+  /**
+   * The selected skill: its text is shown. A second tap on it uses it, or a tap on
+   * an enemy for a skill that needs a target (HANDOFF S2: two taps for each skill).
+   */
+  private selected: string | null = null;
   private hero!: HeroView;
   private enemies: EnemyView[] = [];
   private turnRow!: TurnRow;
@@ -59,7 +61,8 @@ export class BattleScene extends Phaser.Scene {
     const heroDef = gameData.classes[HERO_CLASS]!;
 
     const bg = backgroundKey();
-    if (bg) this.add.image(0, 0, bg).setOrigin(0, 0);
+    // The M1 room is 270 x 480; it stays centred until A0 makes the 360 x 640 room.
+    if (bg) this.add.image(GAME_WIDTH / 2, 0, bg).setOrigin(0.5, 0);
     else this.cameras.main.setBackgroundColor(C.navy);
 
     const slots = enemySlots(this.state.enemies.length);
@@ -80,7 +83,7 @@ export class BattleScene extends Phaser.Scene {
     this.heroPanel = new HeroPanel(this, heroDef.name, spriteName(heroDef), gameData.rules.rageMax);
     this.skillBar = new SkillBar(this, this.state.hero.skills, (id) => this.onSkill(id));
 
-    this.focus = heroDef.signatureSkill;
+    this.selected = heroDef.signatureSkill;
     this.sync();
     void this.run(battleStep(gameData, this.state, { kind: 'begin' }));
   }
@@ -114,27 +117,27 @@ export class BattleScene extends Phaser.Scene {
 
   // ---- input ------------------------------------------------------------------
 
+  /** The prompt for the selected skill: what the next tap does, if it can be used now. */
+  private prompt(): Prompt {
+    const id = this.selected;
+    if (this.phase !== 'input' || id === null || checkSkill(gameData, this.state, id) !== 'ok') return null;
+    return gameData.skills[id]!.target === 'enemy' ? 'enemy' : 'again';
+  }
+
   private onSkill(id: string): void {
     if (this.phase !== 'input') return;
-    const skill = gameData.skills[id]!;
-    this.focus = id;
-    if (checkSkill(gameData, this.state, id) !== 'ok') {
-      this.refreshControls();
+    // First tap: select the skill and show its text. Second tap: use it.
+    if (this.selected === id && this.prompt() === 'again') {
+      this.act(id, null);
       return;
     }
-    if (skill.target === 'enemy') {
-      this.armed = id;
-      this.refreshControls();
-      return;
-    }
-    this.act(id, null);
+    this.selected = id;
+    this.refreshControls();
   }
 
   private onEnemy(index: number): void {
-    if (this.phase !== 'input' || this.armed === null) return;
-    if ((this.state.enemies[index]?.hp ?? 0) <= 0) return;
-    this.focus = this.armed;
-    this.act(this.armed, index);
+    if (this.prompt() !== 'enemy' || (this.state.enemies[index]?.hp ?? 0) <= 0) return;
+    this.act(this.selected!, index);
   }
 
   private act(skill: string, target: number | null): void {
@@ -146,7 +149,6 @@ export class BattleScene extends Phaser.Scene {
   private async run(step: Step): Promise<void> {
     this.phase = 'busy';
     bridge.ready = false;
-    this.armed = null;
     // The views show the new state at the end; the events carry the values in between.
     this.state = step.state;
     this.refreshControls();
@@ -155,9 +157,9 @@ export class BattleScene extends Phaser.Scene {
     this.sync();
     if (this.state.status === 'heroTurn') {
       this.phase = 'input';
+      // Each turn starts with the signature skill (Slash) selected, so one tap on an enemy attacks.
       const signature = gameData.classes[HERO_CLASS]!.signatureSkill;
-      this.armed = checkSkill(gameData, this.state, signature) === 'ok' ? signature : null;
-      if (checkSkill(gameData, this.state, this.focus) !== 'ok' && this.armed) this.focus = this.armed;
+      if (checkSkill(gameData, this.state, signature) === 'ok') this.selected = signature;
       this.refreshControls();
     } else {
       this.phase = 'ended';
@@ -176,7 +178,7 @@ export class BattleScene extends Phaser.Scene {
           if (e.actor !== 'hero') await this.wait(220);
           break;
         case 'skill':
-          this.skillBar.info({ ...skillInfo(gameData, this.state, e.skill, false), status: '' });
+          this.skillBar.info({ ...skillInfo(gameData, this.state, e.skill, null), status: '' });
           this.float(HERO_SLOT.x, this.hero.body.top - 12, gameData.skills[e.skill]!.name, C.cream);
           await this.tween({ targets: this.hero.body.root, y: HERO_SLOT.ground - 8, duration: 90, yoyo: true });
           break;
@@ -317,7 +319,8 @@ export class BattleScene extends Phaser.Scene {
         const skill = gameData.skills[id]!;
         return {
           skill,
-          selected: inTurn && this.armed === id,
+          upgraded: false,
+          selected: inTurn && this.selected === id && check === 'ok',
           usable: check === 'ok' || (check === 'notHeroTurn' && s.status !== 'won' && s.status !== 'lost'),
           cooldown: Math.max(0, s.hero.cooldowns[k] ?? 0),
           noRage: check === 'rage',
@@ -325,8 +328,9 @@ export class BattleScene extends Phaser.Scene {
         };
       }),
     );
-    if (this.focus) this.skillBar.info(skillInfo(gameData, s, this.focus, inTurn && this.armed === this.focus));
-    this.enemies.forEach((view, i) => view.setTargetable(inTurn && this.armed !== null && (s.enemies[i]?.hp ?? 0) > 0));
+    const prompt = this.prompt();
+    if (this.selected) this.skillBar.info(skillInfo(gameData, s, this.selected, prompt));
+    this.enemies.forEach((view, i) => view.setTargetable(prompt === 'enemy' && (s.enemies[i]?.hp ?? 0) > 0));
   }
 
   private showEnd(): void {

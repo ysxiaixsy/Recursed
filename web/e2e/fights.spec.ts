@@ -8,6 +8,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import type { Bridge } from '../src/ui/bridge';
+import { GAME_WIDTH } from '../src/ui/scale';
 
 declare global {
   interface Window {
@@ -32,7 +33,7 @@ async function tap(page: Page, id: string): Promise<void> {
   const target = await page.evaluate((i) => window.__recursed?.targets[i] ?? null, id);
   expect(target, `tap target ${id}`).not.toBeNull();
   const box = (await page.locator('canvas').boundingBox())!;
-  const scale = box.width / 270;
+  const scale = box.width / GAME_WIDTH;
   await page.touchscreen.tap(box.x + (target!.x + target!.w / 2) * scale, box.y + (target!.y + target!.h / 2) * scale);
 }
 

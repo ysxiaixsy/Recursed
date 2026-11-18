@@ -29,17 +29,17 @@ export interface Slot {
 export function enemySlots(count: number): Slot[] {
   switch (count) {
     case 1:
-      return [{ x: 135, ground: 212 }];
+      return [{ x: 180, ground: 284 }];
     case 2:
       return [
-        { x: 68, ground: 194 },
-        { x: 202, ground: 208 },
+        { x: 98, ground: 262 },
+        { x: 262, ground: 282 },
       ];
     default:
       return [
-        { x: 46, ground: 186 },
-        { x: 135, ground: 228 },
-        { x: 224, ground: 186 },
+        { x: 62, ground: 252 },
+        { x: 180, ground: 300 },
+        { x: 298, ground: 252 },
       ];
   }
 }
@@ -59,12 +59,19 @@ export interface SkillInfo {
   text: string;
 }
 
+/**
+ * What the next tap does for a selected, usable skill (HANDOFF S2: two taps):
+ * tap an enemy, or tap the same button again. null: no prompt.
+ */
+export type Prompt = 'enemy' | 'again' | null;
+
 /** The text strip under the skill buttons. */
-export function skillInfo(data: GameData, state: BattleState, skillId: string, targeting: boolean): SkillInfo {
+export function skillInfo(data: GameData, state: BattleState, skillId: string, prompt: Prompt): SkillInfo {
   const skill = data.skills[skillId];
   if (!skill) throw new Error(`Unknown skill ${skillId}`);
   const base = { title: skill.name, text: skill.text };
-  if (targeting) return { ...base, status: 'Tap an enemy', tone: 'ok' };
+  if (prompt === 'enemy') return { ...base, status: 'Tap an enemy', tone: 'ok' };
+  if (prompt === 'again') return { ...base, status: 'Tap again to use', tone: 'ok' };
   switch (checkSkill(data, state, skillId)) {
     case 'cooldown': {
       const turns = state.hero.cooldowns[state.hero.skills.indexOf(skillId)] ?? 0;
