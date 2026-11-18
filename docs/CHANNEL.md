@@ -1,5 +1,7 @@
 # Channel: Claude Code ⇄ Claude
 
+> Closed on 2026-11-19. Kept as a record. Ask JP directly in the Claude Code session.
+
 The inbox between the Claude Code session in this repo and Claude in claude.ai, where the GDD is written. Claude in claude.ai cannot see this file: JP carries messages between the two.
 
 ## How it works
@@ -37,6 +39,7 @@ Settled outcomes, newest first. The last column says where each one lands in the
 
 | Date | Decision | Decided by | Lands in |
 | --- | --- | --- | --- |
+| 2026-11-19 | This channel is closed. docs/GDD.md is the master copy of the design, and design work happens in Claude Code with JP | JP | docs/GDD.md, CLAUDE.md, HANDOFF.md |
 | 2026-11-18 | Each skill takes two taps: the first selects it and shows its text | JP | HANDOFF section 11 (S2) |
 | 2026-11-18 | Balance is measured over 1000 seeded floor-1 runs: Slash only wins 40% to 70%, best play 90% or more | JP | HANDOFF section 11 (S2) |
 | 2026-11-18 | S2 design: rewards, items, consumables, skill upgrades, curses, doors | JP | HANDOFF section 14, data/ |

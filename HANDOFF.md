@@ -3,7 +3,7 @@
 This file holds all build instructions for milestone M3. Read all of it at the start of each session.
 If this file and another file disagree, this file wins. For fight results, `tools/sim/expected.json` wins.
 
-The design is in `docs/GDD.md`, a snapshot of the live GDD that JP exports. It is background only: each instruction you need is in this file or in `data/`. If `docs/GDD.md` is missing, continue. S1 and A1 do not need it.
+The design is in `docs/GDD.md`, the master copy since 2026-11-19. Each build instruction is in this file or in `data/`.
 
 ## 1. Start here
 
@@ -36,7 +36,7 @@ It must answer one question: are the fights fun?
 | `HANDOFF.md` | This file: all instructions, and the status table |
 | `CLAUDE.md` | Short rules and commands for each session |
 | `docs/adr/0001-web-stack.md` | The stack and the folder rules |
-| `docs/GDD.md` | The design, as background |
+| `docs/GDD.md` | The design (master copy) |
 | `data/` | All game numbers |
 | `tools/sim/reference_sim.py` | The combat rules as code |
 | `tools/sim/expected.json` | The fight results that `web/` must match |
@@ -53,7 +53,7 @@ It must answer one question: are the fights fun?
 5. The game state is plain JSON. A save is the state.
 6. Read the current Phaser 4 docs before you write scene code. Most examples on the web are for Phaser 3.
 7. After a change to a combat rule or to `data/`, run `python tools/sim/reference_sim.py` and put its output in the pull request. Update `expected.json` only with `--write`, never by hand. If a fight moves outside its target in `data/rules.json`, ask JP first.
-8. Do not invent design. If a stage needs a design fact that is not in this file or in `data/`, stop and ask JP.
+8. Do not invent design. If a stage needs a design fact that is not in this file or in `data/`, ask JP in the session. Design with him, write the result into `docs/GDD.md` (with a decision in its section 13), then into this file and `data/`.
 
 ## 6. How to work and report
 
@@ -104,10 +104,10 @@ It must answer one question: are the fights fun?
 
 | Stage | State | Needs |
 | --- | --- | --- |
-| S1 First fight | Done: JP tested it on his laptop on 2026-11-18 | Merge PR #1 |
+| S1 First fight | Done: merged (PR #1) on 2026-11-19 | |
 | A0 Second art test | Ready | |
 | A1 Art for the slice | Waits for A0 | JP's verdict on A0 |
-| S2 One full floor | Ready | PR #1 merged |
+| S2 One full floor | In review: PR #3, live at https://ysxiaixsy.github.io/Recursed/ | JP's laptop test (3 runs), and a decision on the balance targets |
 | S3 Evolution and floor 2 | Waits for design | S2, A1, and the "before S3" design |
 | S4 The dungeon remembers | Waits for design | S2, and the "before S4" design |
 
@@ -265,7 +265,7 @@ State: waits for the "before S4" design (section 14). Needs S2.
 
 ## 14. Design
 
-This design happens outside Claude Code: JP and Claude work on it in the GDD. The result then goes into this file and into `data/`, and the stage state changes to Ready. Do not start a stage before that.
+JP and Claude Code do this design together in the session, in `docs/GDD.md`. The result then goes into this file and into `data/`, and the stage state changes to Ready. Do not start a stage before that.
 
 ### S2 design (done, 2026-11-18)
 
@@ -283,6 +283,10 @@ The numbers are in `data/rooms.json`, `data/items.json`, `data/consumables.json`
 - **Doors.** 3 doors before each room, drawn with the seeded random generator and the weights in `data/rooms.json`. Use different room types on the doors when possible. No Elite door before room 1. One door before room 5 is always Rest. Grave doors come with S4, at most 1 on each floor.
 - **Rounding.** Percents of HP round down. Healing never goes above max HP.
 - **No levels and no experience in M3.** The hero grows through items, skill upgrades, and the evolution.
+- **Fights behind doors** (JP, 2026-11-19): drawn with the seeded generator from the floor's encounters of that kind (`normal` for Fight, `elite` for Elite), with no repeat on a floor while others are left.
+- **Max HP items** (JP, 2026-11-19): equipping raises max and current HP. Removing lowers max HP; current HP drops only if above the new max.
+- **Glass and the Bomb** (JP, 2026-11-19): Glass multiplies formula damage only; the Bomb deals its fixed damage.
+- **Start** (JP, 2026-11-19): the plain URL opens a title screen (New run, and Continue when a save exists), then the curse choice. `?debug=1` keeps the fight picker; `?seed=N` fixes the run seed.
 
 ### Still to design
 

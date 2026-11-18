@@ -1,13 +1,13 @@
 /**
- * The game area is 270 x 480 pixels. It is shown at the largest whole-number
+ * The game area is 360 x 640 pixels (HANDOFF S2). It is shown at the largest whole-number
  * scale that fits the screen, counted in device pixels, so each game pixel is
  * an exact square of device pixels. The rest of the screen shows the page
  * background colour.
  */
 import type Phaser from 'phaser';
 
-export const GAME_WIDTH = 270;
-export const GAME_HEIGHT = 480;
+export const GAME_WIDTH = 360;
+export const GAME_HEIGHT = 640;
 
 /** The largest whole-number scale at which the game fits in the given device pixels. */
 export function integerScale(deviceWidth: number, deviceHeight: number): number {

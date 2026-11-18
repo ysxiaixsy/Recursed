@@ -1,19 +1,33 @@
 /**
- * The battle HUD, laid out as art/export/battle_mockup.png: the turn order
- * row, floor label and speed button on top; the hero panel, skill buttons and
- * skill text at the bottom; and the end panel.
+ * The battle HUD at 360 x 640, after art/export/battle_mockup.png: the turn
+ * order row, floor label and speed button on top; the hero panel, consumable
+ * slots, equipment, skill buttons and skill text at the bottom; and the end
+ * panel. Every position is in LAYOUT.
  */
 import Phaser from 'phaser';
 import type { HeroState } from '../../core/battle';
 import type { SkillDef } from '../../core/data';
 import { portraitKey, skillIcon } from '../assets';
-import { tapZone } from '../bridge';
+import { tapZone, type Rect } from '../bridge';
 import { arrow, bar, bolt, chevron, flame, frame, heart, marker, MARKER_SIZE, px } from '../draw';
 import { C } from '../palette';
 import { GAME_HEIGHT, GAME_WIDTH } from '../scale';
 import { addText } from '../text';
 import { DITHER } from '../scenes/BootScene';
 import { initials, type SkillInfo } from './present';
+
+export const LAYOUT = {
+  turnRow: { x: 4, y: 6, w: 154, h: 26 },
+  floor: { x: 166, y: 10, w: 74, h: 18 },
+  speed: { x: 316, y: 10, w: 40, h: 18 },
+  hero: { x: 180, ground: 410 },
+  panel: { x: 2, y: 430, w: 356, h: 208 },
+  heroRow: { y: 438 },
+  slots: { x: 280, y: 436, size: 24, gap: 2 },
+  equipment: { y: 478, columns: [10, 126, 242] },
+  skills: { y: 494, w: 85, h: 50, step: 88, x: 6 },
+  strip: { x: 6, y: 550, w: 348, h: 82 },
+} as const;
 
 /** One unit in the turn order row. */
 export interface MarkerInfo {
@@ -39,21 +53,23 @@ export class TurnRow {
   private readonly g: Phaser.GameObjects.Graphics;
 
   constructor(private readonly scene: Phaser.Scene) {
+    const r = LAYOUT.turnRow;
     const g = scene.add.graphics();
-    frame(g, 2, 4, 154, 26, 'panel');
-    for (let i = 0; i < TurnRow.SLOTS - 1; i++) chevron(g, 67 + i * 28, 15, C.slate);
-    addText(scene, 9, 13, 'TURN', { color: C.cream });
+    frame(g, r.x, r.y, r.w, r.h, 'panel');
+    for (let i = 0; i < TurnRow.SLOTS - 1; i++) chevron(g, r.x + 63 + i * 28, r.y + 11, C.slate);
+    addText(scene, r.x + 7, r.y + 9, 'TURN', { color: C.cream });
     this.g = scene.add.graphics();
   }
 
   /** Show the first 4 units of the order. The first one acts now. */
   show(order: readonly MarkerInfo[]): void {
+    const r = LAYOUT.turnRow;
     for (const p of this.parts) p.destroy();
     this.parts = [];
     this.g.clear();
     order.slice(0, TurnRow.SLOTS).forEach((info, i) => {
-      const x = 44 + i * 28;
-      const y = 6;
+      const x = r.x + 40 + i * 28;
+      const y = r.y + 2;
       marker(this.g, x, y, info.side, i === 0);
       this.parts.push(...drawPortrait(this.scene, this.g, x + 2, y + 2, info));
       if (info.warn) {
@@ -66,25 +82,26 @@ export class TurnRow {
 }
 
 export function floorLabel(scene: Phaser.Scene, floor: number): void {
+  const r = LAYOUT.floor;
   const g = scene.add.graphics();
-  frame(g, 160, 8, 66, 18, 'inset');
-  addText(scene, 193, 13, `FLOOR ${floor}`, { color: C.cream, align: 'center' });
+  frame(g, r.x, r.y, r.w, r.h, 'inset');
+  addText(scene, r.x + r.w / 2, r.y + 5, `FLOOR ${floor}`, { color: C.cream, align: 'center' });
 }
 
 export class SpeedButton {
   private readonly g: Phaser.GameObjects.Graphics;
   private readonly label: Phaser.GameObjects.BitmapText;
-  private static readonly R = { x: 230, y: 8, w: 36, h: 18 };
 
   constructor(scene: Phaser.Scene, speed: number, onTap: () => void) {
+    const r = LAYOUT.speed;
     this.g = scene.add.graphics();
-    this.label = addText(scene, 0, SpeedButton.R.y + 5, '', { color: C.yellow });
-    tapZone(scene, 'speed', SpeedButton.R, onTap);
+    this.label = addText(scene, 0, r.y + 5, '', { color: C.yellow });
+    tapZone(scene, 'speed', r, onTap);
     this.show(speed);
   }
 
   show(speed: number): void {
-    const { x, y, w, h } = SpeedButton.R;
+    const { x, y, w, h } = LAYOUT.speed;
     this.g.clear();
     frame(this.g, x, y, w, h, 'buttonSelected');
     const text = `${speed}x`;
@@ -104,22 +121,28 @@ export class HeroPanel {
   private hp = 0;
   private maxHp = 1;
   private rage = 0;
-  private rageMax = 1;
+  private readonly rageMax: number;
 
   constructor(scene: Phaser.Scene, name: string, sprite: string, rageMax: number) {
+    const p = LAYOUT.panel;
+    const y = LAYOUT.heroRow.y;
     const g = scene.add.graphics();
-    frame(g, 2, 340, 266, 138, 'panel');
-    marker(g, 8, 346, 'hero', false);
-    drawPortrait(scene, g, 10, 348, { side: 'hero', sprite, name, warn: false });
-    addText(scene, 36, 347, name.toUpperCase(), { color: C.cream });
-    heart(g, 36, 361);
-    flame(g, 36, 371);
+    frame(g, p.x, p.y, p.w, p.h, 'panel');
+    marker(g, 10, y, 'hero', false);
+    drawPortrait(scene, g, 12, y + 2, { side: 'hero', sprite, name, warn: false });
+    addText(scene, 38, y + 1, name.toUpperCase(), { color: C.cream });
+    heart(g, 38, y + 15);
+    flame(g, 38, y + 25);
     this.bars = scene.add.graphics();
-    this.hpText = addText(scene, 174, 360, '', { color: C.white });
-    this.rageText = addText(scene, 174, 371, '', { color: C.gold });
-    this.guard = addText(scene, 106, 347, 'GUARD', { color: C.cyan }).setVisible(false);
-    this.atkUp = addText(scene, 154, 347, '', { color: C.orange }).setVisible(false);
+    this.hpText = addText(scene, 206, y + 14, '', { color: C.white });
+    this.rageText = addText(scene, 206, y + 25, '', { color: C.gold });
+    this.guard = addText(scene, 104, y + 1, 'GUARD', { color: C.cyan }).setVisible(false);
+    this.atkUp = addText(scene, 152, y + 1, '', { color: C.orange }).setVisible(false);
     this.rageMax = rageMax;
+  }
+
+  get rageValue(): number {
+    return this.rage;
   }
 
   setHp(hp: number, max = this.maxHp): void {
@@ -127,10 +150,6 @@ export class HeroPanel {
     this.maxHp = max;
     this.hpText.setText(`${hp}/${max}`);
     this.redraw();
-  }
-
-  get rageValue(): number {
-    return this.rage;
   }
 
   setRage(rage: number): void {
@@ -156,15 +175,18 @@ export class HeroPanel {
   }
 
   private redraw(): void {
+    const y = LAYOUT.heroRow.y;
     this.bars.clear();
-    bar(this.bars, 46, 359, 124, 'hp', this.hp, this.maxHp);
-    bar(this.bars, 46, 370, 124, 'rage', this.rage, this.rageMax);
+    bar(this.bars, 48, y + 13, 152, 'hp', this.hp, this.maxHp);
+    bar(this.bars, 48, y + 24, 152, 'rage', this.rage, this.rageMax);
   }
 }
 
 /** How a skill button looks. */
 export interface ButtonState {
   skill: SkillDef;
+  /** The skill was upgraded: its name shows a "+". */
+  upgraded: boolean;
   /** Selected: the gold frame. */
   selected: boolean;
   usable: boolean;
@@ -175,10 +197,12 @@ export interface ButtonState {
   cost: string;
 }
 
+export function skillRect(i: number): Rect {
+  const s = LAYOUT.skills;
+  return { x: s.x + i * s.step, y: s.y, w: s.w, h: s.h };
+}
+
 export class SkillBar {
-  static readonly Y = 386;
-  static readonly W = 62;
-  static readonly H = 46;
   private readonly g: Phaser.GameObjects.Graphics;
   private readonly parts: Phaser.GameObjects.GameObject[][] = [];
   private readonly title: Phaser.GameObjects.BitmapText;
@@ -193,17 +217,14 @@ export class SkillBar {
     this.g = scene.add.graphics();
     skills.forEach((id, i) => {
       this.parts.push([]);
-      tapZone(scene, `skill:${id}`, { x: SkillBar.x(i), y: SkillBar.Y, w: SkillBar.W, h: SkillBar.H }, () => onTap(id));
+      tapZone(scene, `skill:${id}`, skillRect(i), () => onTap(id));
     });
+    const s = LAYOUT.strip;
     const strip = scene.add.graphics();
-    frame(strip, 5, 438, 260, 36, 'inset');
-    this.title = addText(scene, 10, 442, '', { color: C.gold });
-    this.status = addText(scene, 260, 442, '', { color: C.grey, align: 'right' });
-    this.text = addText(scene, 10, 453, '', { color: C.cream, maxWidth: 250 });
-  }
-
-  static x(i: number): number {
-    return 5 + i * 66;
+    frame(strip, s.x, s.y, s.w, s.h, 'inset');
+    this.title = addText(scene, s.x + 6, s.y + 5, '', { color: C.gold });
+    this.status = addText(scene, s.x + s.w - 6, s.y + 5, '', { color: C.grey, align: 'right' });
+    this.text = addText(scene, s.x + 6, s.y + 18, '', { color: C.cream, maxWidth: s.w - 12 });
   }
 
   show(buttons: readonly ButtonState[]): void {
@@ -219,12 +240,11 @@ export class SkillBar {
 
   private drawButton(i: number, b: ButtonState): void {
     const g = this.g;
-    const x = SkillBar.x(i);
-    const y = SkillBar.Y;
+    const { x, y, w, h } = skillRect(i);
     for (const p of this.parts[i]!) p.destroy();
     const parts: Phaser.GameObjects.GameObject[] = [];
     const disabled = !b.usable;
-    frame(g, x, y, SkillBar.W, SkillBar.H, b.selected ? 'buttonSelected' : disabled ? 'buttonDisabled' : 'button');
+    frame(g, x, y, w, h, b.selected ? 'buttonSelected' : disabled ? 'buttonDisabled' : 'button');
     // Icon well.
     frame(g, x + 4, y + 4, 28, 28, 'inset');
     px(g, x + 5, y + 5, 26, 26, C.navy);
@@ -240,20 +260,22 @@ export class SkillBar {
       parts.push(checker, addText(this.scene, x + 14, y + 14, `${b.cooldown}`, { color: C.white, shadow: false }));
     }
     // Rage gain or cost, under a flame. A bolt marks a free skill.
+    const mid = x + 36 + Math.floor((w - 40) / 2);
     if (b.cost) {
       if (b.skill.free) {
-        bolt(g, x + 37, y + 6);
-        flame(g, x + 47, y + 6, disabled);
+        bolt(g, mid - 9, y + 6);
+        flame(g, mid + 2, y + 6, disabled);
       } else {
-        flame(g, x + 43, y + 6, disabled);
+        flame(g, mid - 3, y + 6, disabled);
       }
       const costColor = b.cooldown > 0 ? C.slate : b.noRage ? C.pink : C.gold;
-      parts.push(addText(this.scene, x + 46, y + 17, b.cost, { color: costColor, align: 'center' }));
+      parts.push(addText(this.scene, mid, y + 18, b.cost, { color: costColor, align: 'center' }));
     } else if (b.skill.free) {
-      bolt(g, x + 43, y + 6);
+      bolt(g, mid - 2, y + 6);
     }
     const nameColor = disabled ? C.slate : b.selected ? C.white : C.cream;
-    parts.push(addText(this.scene, x + SkillBar.W / 2, y + 35, b.skill.name.toUpperCase(), { color: nameColor, align: 'center' }));
+    const name = `${b.skill.name.toUpperCase()}${b.upgraded ? '+' : ''}`;
+    parts.push(addText(this.scene, x + w / 2, y + 38, name, { color: nameColor, align: 'center' }));
     this.parts[i] = parts;
   }
 }
@@ -263,18 +285,19 @@ export class EndPanel {
     if (scene.textures.exists(DITHER)) scene.add.tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, DITHER).setOrigin(0, 0);
     // Block taps on the fight behind the panel.
     scene.add.zone(0, 0, GAME_WIDTH, GAME_HEIGHT).setOrigin(0, 0).setInteractive();
+    const cx = GAME_WIDTH / 2;
     const g = scene.add.graphics();
-    frame(g, 35, 136, 200, 168, 'panel');
-    addText(scene, 135, 150, won ? 'VICTORY' : 'DEFEAT', { color: won ? C.gold : C.red, align: 'center' });
-    lines.forEach((line, i) => addText(scene, 135, 172 + i * 12, line, { color: C.cream, align: 'center' }));
+    frame(g, cx - 120, 196, 240, 176, 'panel');
+    addText(scene, cx, 210, won ? 'VICTORY' : 'DEFEAT', { color: won ? C.gold : C.red, align: 'center' });
+    lines.forEach((line, i) => addText(scene, cx, 232 + i * 12, line, { color: C.cream, align: 'center' }));
     const buttons: Array<[string, string, () => void]> = [
       ['again', 'FIGHT AGAIN', onAgain],
       ['pick', 'PICK A FIGHT', onPick],
     ];
     buttons.forEach(([id, label, onTap], i) => {
-      const r = { x: 55, y: 230 + i * 32, w: 160, h: 26 };
+      const r = { x: cx - 90, y: 290 + i * 34, w: 180, h: 26 };
       frame(g, r.x, r.y, r.w, r.h, 'button');
-      addText(scene, 135, r.y + 9, label, { color: C.cream, align: 'center' });
+      addText(scene, cx, r.y + 9, label, { color: C.cream, align: 'center' });
       tapZone(scene, id, r, onTap);
     });
   }

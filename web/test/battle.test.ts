@@ -76,6 +76,23 @@ const data = parseGameData({
   encounters: ['dummy', 'wall', 'fast', 'brute', 'hexer', 'slowHexer', 'crusher', 'leech']
     .map((e) => ({ id: e, name: e, kind: 'normal', floor: 1, enemies: [e] }))
     .concat([{ id: 'weakPair', name: 'Weak pair', kind: 'normal', floor: 1, enemies: ['weak', 'weak'] }]),
+  items: {},
+  consumables: { slots: 3, freeAction: true, maxPerTurn: 1, items: {} },
+  curses: {},
+  rooms: {
+    roomsPerFloor: 5,
+    doorsPerRoom: 3,
+    weights: { fight: 1 },
+    noEliteInRoom: [],
+    restDoorInRoom: [],
+    graveMaxPerFloor: 0,
+    rewards: {
+      fight: { choices: 3, kinds: ['item'] },
+      elite: { choices: 3, kinds: ['item'] },
+      treasure: { gives: ['item'] },
+      rest: { options: [{ kind: 'healPct', pct: 35 }] },
+    },
+  },
 });
 
 function start(encounter: string): Step {

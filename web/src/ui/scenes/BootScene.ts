@@ -1,12 +1,11 @@
 import Phaser from 'phaser';
-import { gameData } from '../../core/gameData';
 import { addKitFrames, loadArt } from '../assets';
 import { C } from '../palette';
 import { loadFonts } from '../text';
 
 export const DITHER = 'dither';
 
-/** Loads the font and the art, then opens the picker (?debug=1) or the first fight. */
+/** Loads the font and the art, then opens the picker (?debug=1) or the title screen. */
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('boot');
@@ -28,6 +27,6 @@ export class BootScene extends Phaser.Scene {
       dither.refresh();
     }
     if (this.registry.get('debug') === true) this.scene.start('picker');
-    else this.scene.start('battle', { encounterId: gameData.encounters[0]!.id });
+    else this.scene.start('title');
   }
 }

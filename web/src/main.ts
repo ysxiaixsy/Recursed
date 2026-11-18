@@ -5,6 +5,8 @@ import { GAME_HEIGHT, GAME_WIDTH, keepFitted } from './ui/scale';
 import { BattleScene } from './ui/scenes/BattleScene';
 import { BootScene } from './ui/scenes/BootScene';
 import { PickerScene } from './ui/scenes/PickerScene';
+import { RunScene } from './ui/scenes/RunScene';
+import { CurseScene, TitleScene } from './ui/scenes/TitleScene';
 
 // Show errors on the page, so a problem on the phone is not a blank screen.
 function showError(message: string): void {
@@ -17,7 +19,12 @@ window.addEventListener('error', (e) => showError(String(e.error?.stack ?? e.mes
 window.addEventListener('unhandledrejection', (e) => showError(String(e.reason?.stack ?? e.reason)));
 
 const debug = new URLSearchParams(window.location.search).get('debug') === '1';
-if (debug) exposeBridge();
+exposeBridge();
+
+// Offline play after the first visit (HANDOFF S2: PWA). The service worker exists only in a build.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => void navigator.serviceWorker.register('./sw.js'));
+}
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -29,7 +36,7 @@ new Phaser.Game({
   scale: { mode: Phaser.Scale.NONE },
   banner: false,
   disableContextMenu: true,
-  scene: [BootScene, PickerScene, BattleScene],
+  scene: [BootScene, TitleScene, CurseScene, RunScene, PickerScene, BattleScene],
   callbacks: {
     preBoot: (game) => game.registry.set('debug', debug),
     postBoot: (game) => keepFitted(game),
