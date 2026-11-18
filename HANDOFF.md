@@ -107,7 +107,7 @@ It must answer one question: are the fights fun?
 | S1 First fight | Done: merged (PR #1) on 2026-11-19 | |
 | A0 Second art test | Ready | |
 | A1 Art for the slice | Waits for A0 | JP's verdict on A0 |
-| S2 One full floor | Ready | PR #1 merged |
+| S2 One full floor | In review: PR #3, live at https://ysxiaixsy.github.io/Recursed/ | JP's laptop test (3 runs), and a decision on the balance targets |
 | S3 Evolution and floor 2 | Waits for design | S2, A1, and the "before S3" design |
 | S4 The dungeon remembers | Waits for design | S2, and the "before S4" design |
 
