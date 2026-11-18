@@ -104,7 +104,7 @@ It must answer one question: are the fights fun?
 
 | Stage | State | Needs |
 | --- | --- | --- |
-| S1 First fight | Done: JP tested it on his laptop on 2026-11-18 | Merge PR #1 |
+| S1 First fight | Done: merged (PR #1) on 2026-11-19 | |
 | A0 Second art test | Ready | |
 | A1 Art for the slice | Waits for A0 | JP's verdict on A0 |
 | S2 One full floor | Ready | PR #1 merged |
