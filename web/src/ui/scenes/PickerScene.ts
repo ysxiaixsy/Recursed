@@ -31,7 +31,7 @@ export class PickerScene extends Phaser.Scene {
       addText(this, r.x + 9, r.y + 10, encounter.name, { color: C.cream });
       const tag = encounter.kind === 'normal' ? '' : encounter.kind.toUpperCase();
       if (tag) addText(this, r.x + r.w - 9, r.y + 10, tag, { color: encounter.kind === 'boss' ? C.red : C.gold, align: 'right' });
-      tapZone(this, `encounter:${encounter.id}`, r, () => this.scene.start('battle', { encounterId: encounter.id }));
+      tapZone(this, `encounter:${encounter.id}`, r, () => this.scene.start('battle', { mode: 'single', encounterId: encounter.id }));
     });
     bridge.ready = true;
   }
