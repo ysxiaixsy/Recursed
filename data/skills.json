@@ -6,7 +6,11 @@
     "rage": 20,
     "cooldown": 0,
     "free": false,
-    "text": "Hit one enemy for 100% ATK. Gain 20 Rage."
+    "text": "Hit one enemy for 100% ATK. Gain 20 Rage.",
+    "upgrade": {
+      "power": 120,
+      "text": "Slash+: 120% ATK."
+    }
   },
   "cleave": {
     "name": "Cleave",
@@ -15,7 +19,11 @@
     "rage": -30,
     "cooldown": 2,
     "free": false,
-    "text": "Hit all enemies for 100% ATK."
+    "text": "Hit all enemies for 100% ATK.",
+    "upgrade": {
+      "cooldown": 1,
+      "text": "Cleave+: cooldown 1."
+    }
   },
   "guard": {
     "name": "Guard",
@@ -28,7 +36,14 @@
       "kind": "guard",
       "damageTakenPct": 50
     },
-    "text": "Free action. Take half damage until your next turn."
+    "text": "Free action. Take half damage until your next turn.",
+    "upgrade": {
+      "effect": {
+        "kind": "guard",
+        "damageTakenPct": 35
+      },
+      "text": "Guard+: take 35% damage."
+    }
   },
   "warcry": {
     "name": "Warcry",
@@ -42,6 +57,10 @@
       "atkPct": 130,
       "turns": 3
     },
-    "text": "Free action. ATK +30% for this turn and the next 2."
+    "text": "Free action. ATK +30% for this turn and the next 2.",
+    "upgrade": {
+      "rage": -35,
+      "text": "Warcry+: costs 35 Rage."
+    }
   }
 }

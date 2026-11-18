@@ -1,0 +1,46 @@
+{
+  "rusted_blade": {
+    "name": "Rusted Blade",
+    "slot": "weapon",
+    "atk": 3,
+    "text": "ATK +3."
+  },
+  "bone_axe": {
+    "name": "Bone Axe",
+    "slot": "weapon",
+    "atk": 6,
+    "speed": -1,
+    "text": "ATK +6. Speed -1."
+  },
+  "padded_coat": {
+    "name": "Padded Coat",
+    "slot": "armor",
+    "hp": 20,
+    "text": "Max HP +20."
+  },
+  "chain_shirt": {
+    "name": "Chain Shirt",
+    "slot": "armor",
+    "def": 10,
+    "text": "DEF +10."
+  },
+  "ember_sigil": {
+    "name": "Ember Sigil",
+    "slot": "relic",
+    "effect": {
+      "kind": "startRage",
+      "rage": 30
+    },
+    "text": "Start each fight with 30 Rage."
+  },
+  "iron_will": {
+    "name": "Iron Will",
+    "slot": "relic",
+    "effect": {
+      "kind": "skillRage",
+      "skill": "guard",
+      "rage": 0
+    },
+    "text": "Guard costs no Rage."
+  }
+}

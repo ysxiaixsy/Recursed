@@ -1,0 +1,54 @@
+{
+  "roomsPerFloor": 5,
+  "doorsPerRoom": 3,
+  "weights": {
+    "fight": 45,
+    "elite": 15,
+    "rest": 15,
+    "treasure": 15,
+    "grave": 10
+  },
+  "noEliteInRoom": [
+    1
+  ],
+  "restDoorInRoom": [
+    5
+  ],
+  "graveMaxPerFloor": 1,
+  "rewards": {
+    "fight": {
+      "choices": 3,
+      "kinds": [
+        "item",
+        "consumable",
+        "skillUpgrade"
+      ]
+    },
+    "elite": {
+      "choices": 3,
+      "kinds": [
+        "item",
+        "consumable",
+        "skillUpgrade"
+      ],
+      "alwaysOne": "relic"
+    },
+    "treasure": {
+      "gives": [
+        "item",
+        "consumable"
+      ]
+    },
+    "rest": {
+      "options": [
+        {
+          "kind": "healPct",
+          "pct": 35
+        },
+        {
+          "kind": "skillUpgrade"
+        }
+      ]
+    }
+  }
+}

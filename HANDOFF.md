@@ -104,11 +104,19 @@ It must answer one question: are the fights fun?
 
 | Stage | State | Needs |
 | --- | --- | --- |
-| S1 First fight | In review: PR #1, live at https://ysxiaixsy.github.io/Recursed/?debug=1 | JP's test on his laptop (no phone for now), then merge |
-| A1 Art for the slice | Ready | |
-| S2 One full floor | Waits for design | S1, and the "before S2" design in section 14 |
+| S1 First fight | Done: JP tested it on his laptop on 2026-11-18 | Merge PR #1 |
+| A0 Second art test | Ready | |
+| A1 Art for the slice | Waits for A0 | JP's verdict on A0 |
+| S2 One full floor | Ready | PR #1 merged |
 | S3 Evolution and floor 2 | Waits for design | S2, A1, and the "before S3" design |
 | S4 The dungeon remembers | Waits for design | S2, and the "before S4" design |
+
+Changes from JP on 2026-11-18, which replace older text in this file:
+
+- The base resolution is 360 x 640, scaled by 3 on a 1080 x 1920 screen. S2 makes the change.
+- The art tone is now dark and grim. A0 sets the new style before A1.
+- Each skill takes two taps (S2).
+- The four 2026-11-18 threads in `docs/CHANNEL.md` are answered in this file. Merge the `channel-doc` branch if it is not merged, then tick those threads and add the outcomes to its Decisions table.
 
 ## 9. S1 First fight
 
@@ -145,18 +153,45 @@ One fight from end to end: the code, the screen, the tests, and a live URL.
 
 Run structure, saves, items, curses, new art.
 
+## 10a. A0 Second art test
+
+JP changed the tone on 2026-11-18. Make a short test in the new style before A1. Use the same process as `art-test-brief.md`: Lua scripts in `tools/art/`, at most 3 rounds for each asset, the automatic checks, and a report in `art/REPORT-A0.md`. Put the A0 files in `art/a0/` (sources and exports), so the M1 art stays as it is until JP decides.
+
+### Style
+
+- Mood: dark and grim, closest to Fear & Hunger. The images in `art/reference/` show the mood and the quality level. They are on JP's computer only, not in git. Copy nothing from them.
+- Rooms are dark. The background has real art, but most of it is in shadow. A pool of light shows the fight area.
+- Ink-illustration look: dark linework, flat colour fills with 2 to 3 tones, one cold rim light. Light comes from the top left.
+- Muted, earthy colours with a few strong accents: blood red, sickly purple, bone.
+- Realistic proportions, not stocky.
+- No body horror, no gore, no nudity. The threat comes from darkness and mood.
+- Heroes face the player.
+
+### What to make
+
+- Base resolution: 360 x 640.
+- Warrior: about 112 x 144. Crypt Spider: about 160 x 192. Floor 1 room: 360 x 640.
+- One battle mockup at 360 x 640: the room, the Warrior, two Crypt Spiders, and the battle UI (thin light frames on dark panels). Export it at 1x and at 3x (1080 x 1920).
+- Make the mockup twice, with two different dark 32-colour palettes. JP picks one.
+
+### Acceptance
+
+- [ ] The automatic checks pass: sizes, palette, hard alpha, exact 3x scale.
+- [ ] The report gives the time and the rounds for each asset, what works, and what does not.
+- [ ] JP's verdict. Pass: A1 uses the A0 sizes, palette, and rules. Fail: JP and Claude choose another art source before A1.
+
 ## 10. A1 Art for the slice
 
-Same rules as `art-test-brief.md`: palette, outline, light, automatic checks, and at most 3 rounds for each asset. The Aseprite path and the build commands are in `art/REPORT.md`.
+Use the style, palette, and sizes that A0 sets (section 10a), and the automatic checks of `art-test-brief.md`. At most 3 rounds for each asset. The Aseprite path and the build commands are in `art/REPORT.md`.
 
 ### What to make
 
 - Font first, because S1 uses a temporary font until then: body text at least 7 pixels tall. Export both fonts as bitmap fonts that Phaser 4 can load, to `art/export/fonts/`.
 - Rename `monster` to `crypt_spider`: the source, the exports, and the names in `tools/art`. In the same pull request, remove the `sprite` field of `crypt_spider` in `data/enemies.json`. From then on, a sprite file name is the unit's id.
-- Monsters: `bone_guard`, `hollow_acolyte`, and `rage_leech` at 80 x 80. `grave_rat` at 48 x 48, because it comes in groups of 3. `the_warden` at 128 x 128.
-- Heroes: `knight` and `berserker` at 64 x 64, made from the Warrior design. Each must read as a Warrior evolution at a glance.
+- Monsters: `bone_guard`, `hollow_acolyte`, `rage_leech`, `grave_rat` (smaller, because it comes in groups of 3), and `the_warden` (the largest). Sizes as A0 sets them.
+- Heroes: `knight` and `berserker` at the A0 hero size, made from the A0 Warrior design. Each must read as a Warrior evolution at a glance.
 - A portrait of each unit for the turn order row, as in the mockup, in `art/export/portraits/`. Include the Warrior and the Crypt Spider.
-- Background: less dither on the walls and the floor.
+- Backgrounds: none. A0 makes the floor 1 room.
 - Door icons for the room types, in `art/export/icons/`: fight, elite, rest, treasure, grave, boss.
 
 ### Acceptance
@@ -167,14 +202,16 @@ Same rules as `art-test-brief.md`: palette, outline, light, automatic checks, an
 
 ## 11. S2 One full floor
 
-State: waits for the "before S2" design (section 14). Needs S1.
+State: ready when PR #1 is merged. The design is in section 14 and in `data/`.
 
 ### What to build
 
+- First, change the base resolution to 360 x 640, scaled by 3 on a 1080 x 1920 screen. Redo the battle layout for it. Each S1 test must still pass.
+- Two taps for each skill. The first tap selects the skill and shows its text. Cleave, Guard, and Warcry fire on a second tap on the same button. Slash fires on a tap on an enemy.
 - Title screen. Start screen: Warrior and one curse (Hunger or Glass).
 - Floor 1: 5 rooms, then the Warden. Before each room, 2 or 3 doors show their room type.
 - Room types: Fight, Elite, Rest, Treasure. (Grave comes in S4.)
-- Rewards, items, consumables, and curse effects: as section 14 gives them when the design is done.
+- Rewards, items, consumables, skill upgrades, curses, and doors: as in section 14 and `data/`.
 - Seeded run: the same seed and the same choices give the same run.
 - Save after each player action. A reload restores the exact state, also in the middle of a fight. Closing the browser never undoes a choice. Death deletes the run save.
 - Run summary: victory or death, rooms cleared, time, seed.
@@ -186,6 +223,7 @@ State: waits for the "before S2" design (section 14). Needs S1.
 - [ ] Unit tests for seeded room generation, rewards, curses, save, and load.
 - [ ] Save test: save in the middle of a fight, load, and finish the fight. The result is the same as with no save.
 - [ ] Playwright: a scripted run with a fixed seed reaches the Warden.
+- [ ] `npm run balance` also plays 1000 seeded floor 1 runs with two policies, and reports the share that beat the Warden. Policy A: Slash only, the first door, the first reward. Policy B: best play in each fight, and a Rest door when HP is below 50%. First targets: A wins 40% to 70% of runs, B wins 90% or more. If a result is outside its target, report it and ask JP before you tune.
 - [ ] The `npm run balance` output is in the pull request.
 - [ ] JP plays 3 runs on his phone and closes the browser in the middle of a fight once. He reports the time of each run.
 
@@ -225,12 +263,30 @@ State: waits for the "before S4" design (section 14). Needs S2.
 - [ ] Test: a hero dies in run 1 with a fixed seed. In run 2 its Grave appears, and the fight uses its skills.
 - [ ] JP meets his own dead Warrior on his phone.
 
-## 14. Design still pending
+## 14. Design
 
 This design happens outside Claude Code: JP and Claude work on it in the GDD. The result then goes into this file and into `data/`, and the stage state changes to Ready. Do not start a stage before that.
 
-- **Before S2:** rewards after Fight, Elite, Treasure, and Rest. The item list for M3. Curse numbers. Door rules: how many doors, and the room weights.
-- **Before S3:** Knight and Berserker: stats, class skill, passive. Skill upgrades. The floor 2 multiplier and the stronger Warden.
+### S2 design (done, 2026-11-18)
+
+The numbers are in `data/rooms.json`, `data/items.json`, `data/consumables.json`, `data/curses.json`, and the `upgrade` fields in `data/skills.json`.
+
+- **Rewards.**
+  - Fight: choose 1 of 3 rewards. Each is a random item, consumable, or skill upgrade. No two are the same.
+  - Elite: the same, but one of the 3 is always a Relic.
+  - Treasure: 1 item and 1 consumable, with no fight.
+  - Rest: heal 35% of max HP, or upgrade a skill.
+- **Items.** Slots: Weapon, Armor, Relic. A new item for a full slot replaces the old one. The player sees both items and can decline the new one.
+- **Consumables.** 3 shared slots. Using one is a free action, at most one each turn. When the slots are full, the player replaces one or declines the new one.
+- **Skill upgrades.** Each skill can be upgraded once. The `upgrade` field lists the values that change. The skill text changes to the upgrade text.
+- **Curses.** Hunger: each kill heals 8% of max HP, and all other healing is halved. Glass: damage dealt x125% (one more multiplier in the damage formula), and max HP x75%.
+- **Doors.** 3 doors before each room, drawn with the seeded random generator and the weights in `data/rooms.json`. Use different room types on the doors when possible. No Elite door before room 1. One door before room 5 is always Rest. Grave doors come with S4, at most 1 on each floor.
+- **Rounding.** Percents of HP round down. Healing never goes above max HP.
+- **No levels and no experience in M3.** The hero grows through items, skill upgrades, and the evolution.
+
+### Still to design
+
+- **Before S3:** Knight and Berserker: stats, class skill, passive. The floor 2 multiplier and the stronger Warden.
 - **Before S4:** AI rules for a dead hero. The 3 preset dead heroes.
 
 ## 15. Cut order if time runs out

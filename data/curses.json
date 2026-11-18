@@ -1,0 +1,14 @@
+{
+  "hunger": {
+    "name": "Hunger",
+    "onKillHealPct": 8,
+    "otherHealingPct": 50,
+    "text": "Each kill heals 8% of max HP. All other healing is halved."
+  },
+  "glass": {
+    "name": "Glass",
+    "damageDealtPct": 125,
+    "maxHpPct": 75,
+    "text": "Deal 25% more damage. Max HP -25%."
+  }
+}

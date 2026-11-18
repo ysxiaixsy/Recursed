@@ -1,0 +1,31 @@
+{
+  "slots": 3,
+  "freeAction": true,
+  "maxPerTurn": 1,
+  "items": {
+    "red_potion": {
+      "name": "Red Potion",
+      "effect": {
+        "kind": "healPct",
+        "pct": 40
+      },
+      "text": "Heal 40% of max HP."
+    },
+    "haste_draught": {
+      "name": "Haste Draught",
+      "effect": {
+        "kind": "gauge",
+        "amount": 50
+      },
+      "text": "Move your marker 50 forward on the turn bar."
+    },
+    "bomb": {
+      "name": "Bomb",
+      "effect": {
+        "kind": "fixedDamageAll",
+        "damage": 25
+      },
+      "text": "Deal 25 damage to each enemy. DEF has no effect."
+    }
+  }
+}

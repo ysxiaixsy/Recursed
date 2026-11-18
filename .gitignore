@@ -14,3 +14,6 @@ Thumbs.db
 
 # Files that the Claude desktop app saves into this folder
 Claude outputs/
+
+# Reference images from other games: for local use only, not published
+art/reference/
