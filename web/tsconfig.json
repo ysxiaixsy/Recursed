@@ -1,0 +1,9 @@
+{
+  "//": "The game: src/core and src/ui, with the browser DOM.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"]
+  },
+  "include": ["src"]
+}

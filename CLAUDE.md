@@ -25,7 +25,13 @@ Re: cursed is a turn-based, permadeath, pixel-art dungeon RPG. Mobile first, por
 
 - `python tools/sim/reference_sim.py`: combat report. Add `--write` to update `tools/sim/expected.json`.
 - Art build and checks: see `art/REPORT.md`.
-- `web/`: add its commands here when S1 creates it.
+- `web/` (run inside `web/`; first `npm ci` and `npx playwright install chromium`):
+  - `npm test`: unit tests, the parity test with `expected.json`, and the core purity test.
+  - `npm run build`: strict type check and build. `tsconfig.core.json` has no DOM types, so a browser API in `src/core` fails here.
+  - `npm run e2e`: Playwright at 390 x 844 with touch; screenshots go to `test-results/screenshots/`. It builds and serves on port 4173, but reuses a server already running there: stop an old `vite preview` first, or it tests a stale build.
+  - `?debug=1` opens the fight picker and exposes `window.__recursed` (tap targets and state) for the e2e tests.
+  - The font is temporary (`node scripts/make-temp-font.mjs`). When A1's fonts land, change `FONT` in `src/ui/text.ts`.
+- Pushes to `main` and to stage branches (`s[0-9]-*`) publish https://ysxiaixsy.github.io/Recursed/ (`.github/workflows/web.yml`). The site shows the last published push.
 
 ## Agent skills
 
