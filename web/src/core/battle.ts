@@ -9,7 +9,7 @@
  * The numbers come from data; the rules match tools/sim/reference_sim.py.
  */
 import { damage } from './damage';
-import type { EnemyAction, EnemyDef, GameData, Rules } from './data';
+import type { EnemyAction, EnemyDef, GameData, Rules, SkillDef } from './data';
 import { nextTurn } from './turnBar';
 
 /** A unit in a fight: the hero, or an enemy by its index from left to right. */
@@ -34,6 +34,37 @@ export interface HeroState {
   atkUp: { pct: number; actions: number } | null;
   /** Hero turns started so far. */
   turns: number;
+  /** Skills with their upgrade (HANDOFF S2). */
+  upgraded: string[];
+  /** Rage values that replace a skill's own (a relic, e.g. Guard costs no Rage). */
+  rageCost: Record<string, number>;
+  /** One more multiplier on formula damage dealt, in percent (Glass); 100 = none. */
+  damagePct: number;
+  /** Healing on each kill, in percent of max HP (Hunger); 0 = none. */
+  killHealPct: number;
+  /** All other healing, in percent (Hunger halves it); 100 = full. */
+  healingPct: number;
+  /** Consumable slots: an id, or null when empty. */
+  consumables: Array<string | null>;
+  /** Consumables used in the current hero turn. */
+  consumablesUsed: number;
+}
+
+/** What a run brings into a fight. Each field left out keeps the class value or no change. */
+export interface HeroSetup {
+  maxHp?: number;
+  /** Current HP; the default is max HP. */
+  hp?: number;
+  atk?: number;
+  def?: number;
+  speed?: number;
+  startRage?: number;
+  upgraded?: readonly string[];
+  rageCost?: Readonly<Record<string, number>>;
+  damageDealtPct?: number;
+  onKillHealPct?: number;
+  otherHealingPct?: number;
+  consumables?: ReadonlyArray<string | null>;
 }
 
 export interface EnemyState {
@@ -63,7 +94,9 @@ export interface BattleState {
 
 export type BattleInput =
   | { kind: 'begin' }
-  | { kind: 'skill'; skill: string; target: number | null };
+  | { kind: 'skill'; skill: string; target: number | null }
+  /** Use the consumable in this slot: a free action, at most data.consumables.maxPerTurn in a turn. */
+  | { kind: 'consumable'; slot: number };
 
 export type BattleEvent =
   /** A unit's turn starts. order: who acts from now on, this unit first (see turnOrder). */
@@ -82,7 +115,12 @@ export type BattleEvent =
   | { type: 'atkUp'; actions: number }
   /** The enemy's next own turn is a special action. */
   | { type: 'telegraph'; actor: number; action: EnemyAction }
-  | { type: 'end'; outcome: 'won' | 'lost' };
+  | { type: 'end'; outcome: 'won' | 'lost' }
+  /** hp: the hero's HP after the healing. */
+  | { type: 'heal'; amount: number; hp: number }
+  | { type: 'consumable'; id: string; slot: number }
+  /** A haste effect moved the hero's marker. gauge: the gauge after it. */
+  | { type: 'gauge'; gauge: number };
 
 export interface Step {
   state: BattleState;
@@ -98,6 +136,19 @@ export interface BattleResult {
 
 /** Why a skill can or cannot be used now. */
 export type SkillCheck = 'ok' | 'notHeroTurn' | 'notHeld' | 'used' | 'cooldown' | 'rage';
+
+/** A skill as this hero has it: the upgrade applied, and a relic Rage cost. */
+export function heroSkill(data: GameData, hero: HeroState, skillId: string): SkillDef {
+  const base = data.skills[skillId];
+  if (!base) throw new Error(`Unknown skill ${skillId}`);
+  let skill: SkillDef = base;
+  if (hero.upgraded.includes(skillId) && base.upgrade) {
+    const { text, ...changes } = base.upgrade;
+    skill = { ...base, ...changes, text };
+  }
+  const rage = hero.rageCost[skillId];
+  return rage === undefined ? skill : { ...skill, rage };
+}
 
 export interface EnemyIntent {
   /** What the enemy does on its next own turn. */
@@ -120,7 +171,7 @@ const BASIC_ATTACK_POWER = 100;
 /** HANDOFF S1: the turn order function gives the next 6 actors. */
 export const TURN_ORDER_LENGTH = 6;
 
-export function createBattle(data: GameData, encounterId: string, classId: string): BattleState {
+export function createBattle(data: GameData, encounterId: string, classId: string, setup: HeroSetup = {}): BattleState {
   const encounter = data.encounters.find((e) => e.id === encounterId);
   if (!encounter) throw new Error(`Unknown encounter ${encounterId}`);
   const cls = data.classes[classId];
@@ -129,18 +180,25 @@ export function createBattle(data: GameData, encounterId: string, classId: strin
     encounterId,
     hero: {
       classId,
-      maxHp: cls.hp,
-      hp: cls.hp,
-      atk: cls.atk,
-      def: cls.def,
-      speed: cls.speed,
-      rage: 0,
+      maxHp: setup.maxHp ?? cls.hp,
+      hp: setup.hp ?? setup.maxHp ?? cls.hp,
+      atk: setup.atk ?? cls.atk,
+      def: setup.def ?? cls.def,
+      speed: setup.speed ?? cls.speed,
+      rage: clampRage(data.rules, setup.startRage ?? 0),
       gauge: 0,
       skills: [...cls.skills],
       cooldowns: cls.skills.map(() => 0),
       guardPct: null,
       atkUp: null,
       turns: 0,
+      upgraded: [...(setup.upgraded ?? [])],
+      rageCost: { ...(setup.rageCost ?? {}) },
+      damagePct: setup.damageDealtPct ?? 100,
+      killHealPct: setup.onKillHealPct ?? 0,
+      healingPct: setup.otherHealingPct ?? 100,
+      consumables: [...(setup.consumables ?? [])],
+      consumablesUsed: 0,
     },
     enemies: encounter.enemies.map((id) => {
       const def = enemyDef(data, id);
@@ -157,6 +215,8 @@ export function battleStep(data: GameData, state: BattleState, input: BattleInpu
   if (input.kind === 'begin') {
     if (s.status !== 'start') throw new IllegalInput(`The fight has already begun (${s.status})`);
     advance(data, s, events);
+  } else if (input.kind === 'consumable') {
+    useConsumable(data, s, input.slot, events);
   } else {
     useSkill(data, s, input.skill, input.target, events);
   }
@@ -166,8 +226,8 @@ export function battleStep(data: GameData, state: BattleState, input: BattleInpu
 export function checkSkill(data: GameData, state: BattleState, skillId: string): SkillCheck {
   if (state.status !== 'heroTurn') return 'notHeroTurn';
   const k = state.hero.skills.indexOf(skillId);
-  const skill = data.skills[skillId];
-  if (k < 0 || !skill) return 'notHeld';
+  if (k < 0 || !data.skills[skillId]) return 'notHeld';
+  const skill = heroSkill(data, state.hero, skillId);
   if (state.usedThisTurn.includes(skillId)) return 'used';
   if ((state.hero.cooldowns[k] ?? 0) > 0) return 'cooldown';
   if (skill.rage < 0 && state.hero.rage < -skill.rage) return 'rage';
@@ -221,6 +281,9 @@ function clone(s: BattleState): BattleState {
       skills: [...s.hero.skills],
       cooldowns: [...s.hero.cooldowns],
       atkUp: s.hero.atkUp && { ...s.hero.atkUp },
+      upgraded: [...s.hero.upgraded],
+      rageCost: { ...s.hero.rageCost },
+      consumables: [...s.hero.consumables],
     },
     enemies: s.enemies.map((e) => ({ ...e })),
     status: s.status,
@@ -243,10 +306,69 @@ function actionOnTurn(def: EnemyDef, ownTurn: number): EnemyAction {
   return p && ownTurn % p.every === 0 ? p.action : 'attack';
 }
 
+/** Heal the hero by an amount, up to max HP. */
+function heal(s: BattleState, amount: number, events: BattleEvent[]): void {
+  const hero = s.hero;
+  const gained = Math.min(amount, hero.maxHp - hero.hp);
+  if (gained <= 0) return;
+  hero.hp += gained;
+  events.push({ type: 'heal', amount: gained, hp: hero.hp });
+}
+
+/** Percents of HP round down (HANDOFF S2). */
+function pctOf(value: number, pct: number): number {
+  return Math.floor((value * pct) / 100);
+}
+
+/** An enemy hit by the hero: damage, defeat, and the Hunger heal on a kill. */
+function hitEnemy(s: BattleState, i: number, amount: number, events: BattleEvent[]): void {
+  const foe = s.enemies[i]!;
+  foe.hp = Math.max(0, foe.hp - amount);
+  events.push({ type: 'damage', target: i, amount, hp: foe.hp });
+  if (foe.hp === 0) {
+    events.push({ type: 'defeated', target: i });
+    if (s.hero.killHealPct > 0) heal(s, pctOf(s.hero.maxHp, s.hero.killHealPct), events);
+  }
+}
+
+function endIfWon(s: BattleState, events: BattleEvent[]): boolean {
+  if (!s.enemies.every((e) => e.hp === 0)) return false;
+  s.status = 'won';
+  events.push({ type: 'end', outcome: 'won' });
+  return true;
+}
+
+function useConsumable(data: GameData, s: BattleState, slot: number, events: BattleEvent[]): void {
+  if (s.status !== 'heroTurn') throw new IllegalInput(`No consumable outside a hero turn (${s.status})`);
+  const hero = s.hero;
+  const id = hero.consumables[slot];
+  const def = id ? data.consumables.items[id] : undefined;
+  if (!id || !def) throw new IllegalInput(`Consumable slot ${slot} is empty`);
+  if (hero.consumablesUsed >= data.consumables.maxPerTurn) throw new IllegalInput('No more consumables this turn');
+  hero.consumables[slot] = null;
+  hero.consumablesUsed += 1;
+  events.push({ type: 'consumable', id, slot });
+  const effect = def.effect;
+  switch (effect.kind) {
+    case 'healPct':
+      heal(s, pctOf(pctOf(hero.maxHp, effect.pct), hero.healingPct), events);
+      break;
+    case 'gauge':
+      hero.gauge += effect.amount;
+      events.push({ type: 'gauge', gauge: hero.gauge });
+      break;
+    case 'fixedDamageAll':
+      // Fixed damage: DEF and damage multipliers do not apply (JP, 2026-11-19: D45).
+      s.enemies.forEach((e, i) => e.hp > 0 && hitEnemy(s, i, effect.damage, events));
+      endIfWon(s, events);
+      break;
+  }
+}
+
 function useSkill(data: GameData, s: BattleState, skillId: string, target: number | null, events: BattleEvent[]): void {
   const check = checkSkill(data, s, skillId);
   if (check !== 'ok') throw new IllegalInput(`Cannot use ${skillId}: ${check}`);
-  const skill = data.skills[skillId]!;
+  const skill = heroSkill(data, s.hero, skillId);
   if (skill.target === 'enemy') {
     const foe = target === null ? undefined : s.enemies[target];
     if (!foe || foe.hp <= 0) throw new IllegalInput(`${skillId} needs a living enemy as target, not ${target}`);
@@ -256,14 +378,11 @@ function useSkill(data: GameData, s: BattleState, skillId: string, target: numbe
 
   const hero = s.hero;
   events.push({ type: 'skill', skill: skillId, target });
-  // Warcry counts for this hit only if it was up before the skill.
-  const multipliers = hero.atkUp ? [hero.atkUp.pct] : [];
+  // Warcry counts for this hit only if it was up before the skill. Glass adds one multiplier.
+  const multipliers = [...(hero.atkUp ? [hero.atkUp.pct] : []), ...(hero.damagePct !== 100 ? [hero.damagePct] : [])];
   const hit = (i: number) => {
     const foe = s.enemies[i]!;
-    const amount = damage(hero.atk, skill.power, foe.def, data.rules.defenceConstant, multipliers);
-    foe.hp = Math.max(0, foe.hp - amount);
-    events.push({ type: 'damage', target: i, amount, hp: foe.hp });
-    if (foe.hp === 0) events.push({ type: 'defeated', target: i });
+    hitEnemy(s, i, damage(hero.atk, skill.power, foe.def, data.rules.defenceConstant, multipliers), events);
   };
   if (skill.target === 'enemy') hit(target!);
   if (skill.target === 'allEnemies') s.enemies.forEach((e, i) => e.hp > 0 && hit(i));
@@ -290,11 +409,7 @@ function useSkill(data: GameData, s: BattleState, skillId: string, target: numbe
     hero.atkUp = left > 0 ? { pct: hero.atkUp.pct, actions: left } : null;
     events.push({ type: 'atkUp', actions: left });
   }
-  if (s.enemies.every((e) => e.hp === 0)) {
-    s.status = 'won';
-    events.push({ type: 'end', outcome: 'won' });
-    return;
-  }
+  if (endIfWon(s, events)) return;
   if (endsTurn) advance(data, s, events);
 }
 
@@ -326,6 +441,7 @@ function startHeroTurn(data: GameData, s: BattleState, events: BattleEvent[]): v
   hero.turns += 1;
   s.status = 'heroTurn';
   s.usedThisTurn = [];
+  hero.consumablesUsed = 0;
   events.push({ type: 'turn', actor: 'hero', order: turnOrder(data, s, TURN_ORDER_LENGTH) });
   if (guardEnds) events.push({ type: 'guard', active: false });
 }
