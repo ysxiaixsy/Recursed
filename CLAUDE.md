@@ -5,7 +5,7 @@ Re: cursed is a turn-based, permadeath, pixel-art dungeon RPG. Mobile first, por
 ## Where things are
 
 - `HANDOFF.md`: all build instructions and the status of each stage. Start each session there.
-- `docs/GDD.md`: the design. It is a snapshot of the live GDD, which JP keeps in a Claude Doc. Do not edit it here.
+- `docs/GDD.md`: the design, and the master copy of it since 2026-11-19. Design work happens here with JP: write each change into `docs/GDD.md`, log each decision in its section 13, and then update `HANDOFF.md` and `data/`.
 - `docs/adr/`: decisions. Read `0001-web-stack.md` before any work in `web/`.
 - `data/`: all game numbers. Every iteration reads them.
 - `tools/sim/reference_sim.py`: the combat rules as code. `tools/sim/expected.json`: the fight results that `web/` must match.
@@ -14,8 +14,7 @@ Re: cursed is a turn-based, permadeath, pixel-art dungeon RPG. Mobile first, por
 
 ## Channel with Claude
 
-- `docs/CHANNEL.md` is the inbox with Claude in claude.ai, which writes the GDD. JP carries messages between the two. Its first section holds the rules.
-- At the start of each session, read its Open threads and the newest Log lines. When a stage needs a design fact (HANDOFF rule 8), post the question there as a new thread. End each session with one Log line.
+- `docs/CHANNEL.md` is a record of the old inbox with Claude in claude.ai. It is no longer used: ask JP directly in the session.
 
 ## Rules
 
