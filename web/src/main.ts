@@ -21,6 +21,11 @@ window.addEventListener('unhandledrejection', (e) => showError(String(e.reason?.
 const debug = new URLSearchParams(window.location.search).get('debug') === '1';
 exposeBridge();
 
+// Offline play after the first visit (HANDOFF S2: PWA). The service worker exists only in a build.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => void navigator.serviceWorker.register('./sw.js'));
+}
+
 new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
