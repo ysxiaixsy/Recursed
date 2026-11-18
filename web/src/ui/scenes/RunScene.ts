@@ -126,14 +126,15 @@ export class RunScene extends Phaser.Scene {
       }
       case 'swapConsumable': {
         const item = gameData.consumables.items[phase.consumable]!;
-        title(this, 20, 'CONSUMABLE SLOTS ARE FULL', `New: ${item.name}. ${item.text}`);
+        title(this, 20, 'CONSUMABLE SLOTS ARE FULL', `New: ${item.name}. Replace one, or decline it.`);
+        addText(this, X + 10, 76, item.text, { color: C.grey, maxWidth: W - 20 });
         run.hero.consumables.forEach((id, i) => {
           const name = id ? gameData.consumables.items[id]!.name : '-';
-          button(this, `swapc:${i}`, { x: X, y: 84 + i * 52, w: W, h: 42 }, `REPLACE ${name.toUpperCase()}`, () => this.choose({ kind: 'swapConsumable', slot: i }), {
+          button(this, `swapc:${i}`, { x: X, y: 104 + i * 52, w: W, h: 42 }, `REPLACE ${name.toUpperCase()}`, () => this.choose({ kind: 'swapConsumable', slot: i }), {
             align: 'left',
           });
         });
-        button(this, 'swapc:decline', { x: X, y: 84 + run.hero.consumables.length * 52, w: W, h: 42 }, `DECLINE ${item.name.toUpperCase()}`, () => this.choose({ kind: 'swapConsumable', slot: null }), {
+        button(this, 'swapc:decline', { x: X, y: 104 + run.hero.consumables.length * 52, w: W, h: 42 }, `DECLINE ${item.name.toUpperCase()}`, () => this.choose({ kind: 'swapConsumable', slot: null }), {
           align: 'left',
           color: C.grey,
         });
