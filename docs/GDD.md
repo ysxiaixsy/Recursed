@@ -518,7 +518,7 @@ No dates are set. The tech stack is web: D33, and ADR 0001 in the repo.
 
 ## 13. Decision log and open questions
 
-Forty-two decisions are made. Everything not in this table is a proposal or an open question.
+Forty-six decisions are made. Everything not in this table is a proposal or an open question.
 
 | \#  | Decision                                                                                                                                                                    | Decided    |
 |-----|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
@@ -564,6 +564,10 @@ Forty-two decisions are made. Everything not in this table is a proposal or an o
 | D40 | Each skill takes two taps: select, then fire. Floor-wide HP loss, not single fights, is what kills a weak player.                                                                      | 2026-11-18 |
 | D41 | No body horror, no gore, no nudity. The threat comes from darkness and mood. S1 passed JP's laptop test.                                                                               | 2026-11-18 |
 | D42 | docs/GDD.md in the repo is the master copy of the design. Design work happens in Claude Code with JP. docs/CHANNEL.md is no longer needed. | 2026-11-19 |
+| D43 | A Fight or Elite door draws its fight with the seeded generator from the floor's fights of that kind, with no repeat on a floor while others are left. | 2026-11-19 |
+| D44 | An item with Max HP raises max and current HP when equipped. Removing it lowers max HP; current HP drops only if above the new max. | 2026-11-19 |
+| D45 | Glass multiplies formula damage only. A Bomb deals its fixed 25. | 2026-11-19 |
+| D46 | The plain URL opens a title screen (New run, Continue), then the curse choice. ?debug=1 opens the fight picker; ?seed=N fixes the seed. | 2026-11-19 |
 
 **Next questions, in order**
 

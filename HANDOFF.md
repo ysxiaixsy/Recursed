@@ -283,6 +283,10 @@ The numbers are in `data/rooms.json`, `data/items.json`, `data/consumables.json`
 - **Doors.** 3 doors before each room, drawn with the seeded random generator and the weights in `data/rooms.json`. Use different room types on the doors when possible. No Elite door before room 1. One door before room 5 is always Rest. Grave doors come with S4, at most 1 on each floor.
 - **Rounding.** Percents of HP round down. Healing never goes above max HP.
 - **No levels and no experience in M3.** The hero grows through items, skill upgrades, and the evolution.
+- **Fights behind doors** (JP, 2026-11-19): drawn with the seeded generator from the floor's encounters of that kind (`normal` for Fight, `elite` for Elite), with no repeat on a floor while others are left.
+- **Max HP items** (JP, 2026-11-19): equipping raises max and current HP. Removing lowers max HP; current HP drops only if above the new max.
+- **Glass and the Bomb** (JP, 2026-11-19): Glass multiplies formula damage only; the Bomb deals its fixed damage.
+- **Start** (JP, 2026-11-19): the plain URL opens a title screen (New run, and Continue when a save exists), then the curse choice. `?debug=1` keeps the fight picker; `?seed=N` fixes the run seed.
 
 ### Still to design
 
